@@ -1,0 +1,8 @@
+${AnsiColor.BRIGHT_RED}
+        ┓┏┓ ┏┏┓┏┓      ┏┓    •      ┓        ┳┓┓ ┏┓┏┓┓┏┓  ┳┳┓┏┓┏┓┳┏┓
+        ┣┫┃┃┃┃┫ ┫  ━━  ┗┓┏┓┏┓┓┏┓┏┓  ┣┓┏┓┏┓╋  ┣┫┃ ┣┫┃ ┃┫   ┃┃┃┣┫┃┓┃┃
+        ┛┗┗┻┛┗┛┗┛      ┗┛┣┛┛ ┗┛┗┗┫  ┗┛┗┛┗┛┗  ┻┛┗┛┛┗┗┛┛┗┛  ┛ ┗┛┗┗┛┻┗┛
+                         ┛       ┛
+${AnsiColor.DEFAULT}
+Spring Boot: ${spring-boot.version}
+Application name: ${spring.application.name}
