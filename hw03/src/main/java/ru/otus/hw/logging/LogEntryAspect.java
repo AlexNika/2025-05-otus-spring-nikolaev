@@ -1,5 +1,6 @@
 package ru.otus.hw.logging;
 
+import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
@@ -21,6 +22,7 @@ import java.util.StringJoiner;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
+@Slf4j
 @Aspect
 @Component
 public class LogEntryAspect {
@@ -31,22 +33,15 @@ public class LogEntryAspect {
         var methodSignature = (MethodSignature) point.getSignature();
         Method method = methodSignature.getMethod();
         Logger logger = LoggerFactory.getLogger(method.getDeclaringClass());
-        var annotation = method.getAnnotation(LogEntry.class);
-        LogLevel level = annotation.value();
-        ChronoUnit unit = annotation.unit();
-        boolean showArgs = annotation.showArgs();
-        boolean showResult = annotation.showResult();
-        boolean showExecutionTime = annotation.showExecutionTime();
+        AnnotationParams annotationParams = getAnnotationParams(method);
         String methodName = method.getName();
         Object[] methodArgs = point.getArgs();
         String[] methodParams = codeSignature.getParameterNames();
-        log(logger, level, entry(methodName, showArgs, methodParams, methodArgs));
-        var start = Instant.now();
-        var response = point.proceed();
-        var end = Instant.now();
-        var duration = String.format("%s %s", unit.between(start, end), unit.name().toLowerCase());
-        log(logger, level, exit(methodName, duration, response, showResult, showExecutionTime));
-        return response;
+        log(logger, annotationParams.level(), entry(methodName, annotationParams.showArgs(), methodParams, methodArgs));
+        FinalResult finalResult = launchPointAndGetDurationMetric(point, annotationParams.unit());
+        log(logger, annotationParams.level(), exit(methodName, finalResult.duration(), finalResult.response(),
+                annotationParams.showResult(), annotationParams.showExecutionTime()));
+        return finalResult.response();
     }
 
     static String entry(String methodName, boolean showArgs, String[] params, Object[] args) {
@@ -54,7 +49,7 @@ public class LogEntryAspect {
                 .add("Started")
                 .add(methodName)
                 .add("method");
-        if (showArgs && Objects.nonNull(params) && Objects.nonNull(args) && params.length == args.length) {
+        if (isShowArgsParamsAndArgs(showArgs, params, args)) {
             Map<String, Object> values = IntStream.range(0, params.length)
                     .boxed()
                     .collect(Collectors
@@ -62,6 +57,7 @@ public class LogEntryAspect {
                                     i -> args[i],
                                     (a, b) -> b,
                                     () -> new HashMap<>(params.length)));
+            log.info("!!! -> values: {}", values);
             message.add("with args:")
                     .add(values.toString());
         }
@@ -93,5 +89,36 @@ public class LogEntryAspect {
             case ERROR, FATAL -> logger.error(message);
             default -> logger.info(message);
         }
+    }
+
+    private static AnnotationParams getAnnotationParams(Method method) {
+        var annotation = method.getAnnotation(LogEntry.class);
+        LogLevel level = annotation.value();
+        ChronoUnit unit = annotation.unit();
+        boolean showArgs = annotation.showArgs();
+        boolean showResult = annotation.showResult();
+        boolean showExecutionTime = annotation.showExecutionTime();
+        return new AnnotationParams(level, unit, showArgs, showResult, showExecutionTime);
+    }
+
+    private static FinalResult launchPointAndGetDurationMetric(ProceedingJoinPoint point, ChronoUnit chronoUnit)
+            throws Throwable {
+        var start = Instant.now();
+        var response = point.proceed();
+        var end = Instant.now();
+        var duration = String.format("%s %s", chronoUnit.between(start, end),
+                chronoUnit.name().toLowerCase());
+        return new FinalResult(response, duration);
+    }
+
+    private record FinalResult(Object response, String duration) {
+    }
+
+    private record AnnotationParams(LogLevel level, ChronoUnit unit, boolean showArgs, boolean showResult,
+                                    boolean showExecutionTime) {
+    }
+
+    private static boolean isShowArgsParamsAndArgs(boolean showArgs, String[] params, Object[] args) {
+        return showArgs && Objects.nonNull(params) && Objects.nonNull(args) && params.length == args.length;
     }
 }
