@@ -1,0 +1,23 @@
+spring:
+  application:
+    name: HW03 - Spring boot BLACK MAGIC
+  messages:
+    baseName: messages
+    encoding: UTF-8
+    # Не дает свалиться в системную локаль если не найден файл для переданной в MessageSource
+    # Если false то будут браться сообщения из дефолтного файла, если true, то из файла соответствующего системной локали
+    fallbackToSystemLocale: false
+    cache-duration: 3600
+  banner:
+    location: classpath:/banner.txt
+test:
+  rightAnswersCountToPass: 3
+  locale: en-US
+  fileNameByLocaleTag:
+    ru-RU: questions_ru.csv
+    en-US: questions.csv
+  delimiter: ;
+  skippedRows: 1
+logging:
+  level:
+    ROOT: INFO
