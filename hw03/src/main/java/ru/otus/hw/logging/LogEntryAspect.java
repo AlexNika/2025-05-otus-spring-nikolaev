@@ -44,12 +44,12 @@ public class LogEntryAspect {
         return finalResult.response();
     }
 
-    static String entry(String methodName, boolean showArgs, String[] params, Object[] args) {
+    private static String entry(String methodName, boolean showArgs, String[] params, Object[] args) {
         StringJoiner message = new StringJoiner(" ")
                 .add("Started")
                 .add(methodName)
                 .add("method");
-        if (isShowArgsParamsAndArgs(showArgs, params, args)) {
+        if (isShowArgsParamsAndArgsCorrect(showArgs, params, args)) {
             Map<String, Object> values = IntStream.range(0, params.length)
                     .boxed()
                     .collect(Collectors
@@ -57,14 +57,13 @@ public class LogEntryAspect {
                                     i -> args[i],
                                     (a, b) -> b,
                                     () -> new HashMap<>(params.length)));
-            log.info("!!! -> values: {}", values);
             message.add("with args:")
                     .add(values.toString());
         }
         return message.toString();
     }
 
-    static String exit(String methodName, String duration, Object result, boolean showResult,
+    private static String exit(String methodName, String duration, Object result, boolean showResult,
                        boolean showExecutionTime) {
         StringJoiner message = new StringJoiner(" ")
                 .add("Finished")
@@ -81,7 +80,7 @@ public class LogEntryAspect {
         return message.toString();
     }
 
-    static void log(Logger logger, LogLevel level, String message) {
+    private static void log(Logger logger, LogLevel level, String message) {
         switch (level) {
             case DEBUG -> logger.debug(message);
             case TRACE -> logger.trace(message);
@@ -118,7 +117,7 @@ public class LogEntryAspect {
                                     boolean showExecutionTime) {
     }
 
-    private static boolean isShowArgsParamsAndArgs(boolean showArgs, String[] params, Object[] args) {
+    private static boolean isShowArgsParamsAndArgsCorrect(boolean showArgs, String[] params, Object[] args) {
         return showArgs && Objects.nonNull(params) && Objects.nonNull(args) && params.length == args.length;
     }
 }
