@@ -1,0 +1,6 @@
+spring:
+  application:
+    name: HW04 - Spring boot advanced configuration
+  shell:
+    interactive:
+      enabled: false

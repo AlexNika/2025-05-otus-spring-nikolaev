@@ -1,0 +1,76 @@
+package ru.otus.hw.service;
+
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
+import ru.otus.hw.logging.annotation.LogEntry;
+
+import java.io.InputStream;
+import java.io.PrintStream;
+import java.time.temporal.ChronoUnit;
+import java.util.Scanner;
+
+@Service
+public class StreamsIOService implements IOService {
+
+    private static final int MAX_ATTEMPTS = 10;
+
+    private final PrintStream printStream;
+
+    private final Scanner scanner;
+
+    public StreamsIOService(@Value("#{T(System).out}") PrintStream printStream,
+                            @Value("#{T(System).in}") InputStream inputStream) {
+        this.printStream = printStream;
+        this.scanner = new Scanner(inputStream);
+    }
+
+    @Override
+    @LogEntry(showArgs = true, showResult = true, unit = ChronoUnit.MILLIS)
+    public void printLine(String s) {
+        printStream.println(s);
+    }
+
+    @Override
+    @LogEntry(showArgs = true, showResult = true, unit = ChronoUnit.MILLIS)
+    public void printFormattedLine(String s, Object... args) {
+        printStream.printf(s + "%n", args);
+    }
+
+    @Override
+    @LogEntry(showArgs = true, showResult = true, unit = ChronoUnit.MILLIS)
+    public String readString() {
+        return scanner.nextLine();
+    }
+
+    @Override
+    @LogEntry(showArgs = true, showResult = true, unit = ChronoUnit.MILLIS)
+    public String readStringWithPrompt(String prompt) {
+        printLine(prompt);
+        return scanner.nextLine();
+    }
+
+    @Override
+    @LogEntry(showArgs = true, showResult = true, unit = ChronoUnit.MILLIS)
+    public int readIntForRange(int min, int max, String errorMessage) {
+        for (int i = 0; i < MAX_ATTEMPTS; i++) {
+            try {
+                var stringValue = scanner.nextLine();
+                int intValue = Integer.parseInt(stringValue);
+                if (intValue < min || intValue > max) {
+                    throw new IllegalArgumentException();
+                }
+                return intValue;
+            } catch (IllegalArgumentException e) {
+                printLine(errorMessage);
+            }
+        }
+        throw new IllegalArgumentException("Error during reading int value");
+    }
+
+    @Override
+    @LogEntry(showArgs = true, showResult = true, unit = ChronoUnit.MILLIS)
+    public int readIntForRangeWithPrompt(int min, int max, String prompt, String errorMessage) {
+        printLine(prompt);
+        return readIntForRange(min, max, errorMessage);
+    }
+}

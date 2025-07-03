@@ -1,0 +1,24 @@
+spring:
+  application:
+    name: HW04 - Spring boot advanced configuration
+  messages:
+    baseName: messages
+    encoding: UTF-8
+    fallbackToSystemLocale: false
+    cache-duration: 3600
+  banner:
+    location: classpath:/banner.txt
+  shell:
+    interactive:
+      enabled: true
+test:
+  rightAnswersCountToPass: 3
+  locale: ru-RU
+  fileNameByLocaleTag:
+    ru-RU: questions_ru.csv
+    en-US: questions.csv
+  delimiter: ;
+  skippedRows: 1
+logging:
+  level:
+    root: INFO
