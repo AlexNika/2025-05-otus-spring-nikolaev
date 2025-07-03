@@ -19,4 +19,4 @@ jobs:
           cache: maven
 
       - name: Build application
-        run: mvn verify --no-transfer-progress
+        run: mvn clean verify --no-transfer-progress
