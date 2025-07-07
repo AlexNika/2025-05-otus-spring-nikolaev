@@ -1,0 +1,93 @@
+package ru.otus.hw.service;
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Captor;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import ru.otus.hw.dao.QuestionDao;
+import ru.otus.hw.domain.Answer;
+import ru.otus.hw.domain.Question;
+import ru.otus.hw.domain.Student;
+import ru.otus.hw.domain.TestResult;
+
+import java.util.List;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.BDDMockito.given;
+import static org.mockito.BDDMockito.willDoNothing;
+import static org.mockito.Mockito.*;
+
+@SpringBootTest(classes = {TestServiceImpl.class})
+class TestServiceTest {
+
+    @MockitoBean
+    private QuestionDao questionDao;
+
+    @MockitoBean
+    private LocalizedIOService ioService;
+
+    @Captor
+    private ArgumentCaptor<String> stringArgumentCaptor;
+
+    @Autowired
+    private TestServiceImpl testService;
+
+    private List<Question> expectedQuestions;
+
+    private Student student;
+
+    private TestResult expextedTestResult;
+
+    @BeforeEach
+    void setUp() {
+        String questionText = """
+                Which word is reserved in the Python programming language for getting the return value from a function?
+                """;
+        Answer answer1 = new Answer("revert", false);
+        Answer answer2 = new Answer("return", true);
+        Answer answer3 = new Answer("reborn", false);
+        Answer answer4 = new Answer("restart", false);
+        Question question = new Question(questionText, List.of(answer1, answer2, answer3, answer4));
+        expectedQuestions = List.of(question);
+        student = new Student("Petr", "Petrov");
+        expextedTestResult = new TestResult(student);
+        expextedTestResult.setRightAnswersCount(1);
+    }
+
+    @DisplayName("Should get questions from QuestionDao than run test for student and check answer")
+    @Test
+    void executeTestFor() {
+        given(questionDao.findAll()).willReturn(expectedQuestions);
+        given(ioService.readIntForRangeWithPromptLocalized(anyInt(), anyInt(), anyString(),
+                anyString())).willReturn(2);
+
+        willDoNothing().given(ioService).printLine(stringArgumentCaptor.capture());
+
+        TestResult actualTestResult = testService.executeTestFor(student);
+
+        assertEquals(questionDao.findAll().size(), actualTestResult.getAnsweredQuestions().size());
+        assertEquals(expextedTestResult.getRightAnswersCount(), actualTestResult.getRightAnswersCount());
+
+        verify(questionDao, times(2)).findAll();
+        verify(ioService, times(4)).printLine(any(String.class));
+        verify(ioService, times(1)).readIntForRangeWithPromptLocalized(anyInt(), anyInt(),
+                anyString(), anyString());
+
+        List<String> actualPrintedLines = stringArgumentCaptor.getAllValues();
+        assertThat(actualPrintedLines).hasSizeGreaterThan(expectedQuestions.size());
+
+        assertThat(actualTestResult.getAnsweredQuestions())
+                .usingRecursiveFieldByFieldElementComparator()
+                .containsExactlyElementsOf(expectedQuestions);
+
+        assertThat(actualTestResult).isNotNull()
+                .usingRecursiveComparison()
+                .ignoringFields("answeredQuestions")
+                .isEqualTo(expextedTestResult);
+    }
+}
