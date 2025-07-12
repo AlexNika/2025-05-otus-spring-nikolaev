@@ -70,11 +70,8 @@ public class JdbcBookRepository implements BookRepository {
     @Override
     public List<Book> findAll() {
         List<Genre> genres = genreRepository.findAll();
-        log.info("!!! -> genres: {}", genres);
         List<BookGenreRelation> relations = getAllGenreRelations();
-        log.info("!!! -> relations: {}", relations);
         List<Book> books = getAllBooksWithoutGenres();
-        log.info("!!! -> books: {}", books);
         mergeBooksInfo(books, genres, relations);
         return books;
     }
