@@ -1,0 +1,19 @@
+spring:
+  datasource:
+    url: jdbc:h2:mem:maindb;TRACE_LEVEL_SYSTEM_OUT=1
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
+      settings:
+        web-allow-others: true
+        trace: true
+  shell:
+    interactive:
+      enabled: true
+    script:
+      enabled: true
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
+    baseline-version: 0
