@@ -1,0 +1,22 @@
+spring:
+  datasource:
+    url: jdbc:h2:mem:hw06-jpa-test;MODE=PostgreSQL
+  jpa:
+    generate-ddl: false
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        format_sql: true
+    show-sql: false
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
+    baseline-version: 0
+  sql:
+    init:
+      mode: never
+logging:
+  level:
+    root: error
