@@ -1,0 +1,33 @@
+spring:
+  data:
+    mongodb:
+      port: 0
+      database: hw08-data-mongodb-test
+  shell:
+    interactive:
+      enabled: false
+    noninteractive:
+      enabled: true
+    script:
+      enabled: false
+    command:
+      version:
+        enabled: false
+de:
+  flapdoodle:
+    mongodb:
+      embedded:
+        version: 8.0.12
+mongock:
+  runner-type: "InitializingBean"
+  change-logs-scan-package:
+    - ru.otus.hw.mongock.testchangelog
+  mongo-db:
+    write-concern:
+      journal: false
+    read-concern: local
+logging:
+  level:
+    root: info
+    de.flapdoodle.embed: DEBUG
+    org.springframework.data.mongodb: DEBUG
