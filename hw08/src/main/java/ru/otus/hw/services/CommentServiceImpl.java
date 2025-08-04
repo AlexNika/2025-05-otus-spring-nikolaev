@@ -3,7 +3,6 @@ package ru.otus.hw.services;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import ru.otus.hw.dto.CommentDto;
 import ru.otus.hw.dto.mappers.CommentMapper;
 import ru.otus.hw.exceptions.EntityNotFoundException;
@@ -44,7 +43,6 @@ public class CommentServiceImpl implements CommentService {
     }
 
     @Override
-    @Transactional(readOnly = true)
     public List<CommentDto> findByBookId(String bookId) {
         bookRepository.findById(bookId)
                 .orElseThrow(() -> new EntityNotFoundException(ENTITY_NOT_FOUND_MESSAGE
@@ -55,7 +53,6 @@ public class CommentServiceImpl implements CommentService {
     }
 
     @Override
-    @Transactional
     public CommentDto insert(@Valid String text, String bookId) {
         Book book = bookRepository.findById(bookId)
                 .orElseThrow(() -> new EntityNotFoundException(ENTITY_NOT_FOUND_MESSAGE
@@ -64,7 +61,6 @@ public class CommentServiceImpl implements CommentService {
     }
 
     @Override
-    @Transactional
     public CommentDto update(String id, @Valid String text) {
         Comment comment = commentRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException(ENTITY_NOT_FOUND_MESSAGE
@@ -74,7 +70,6 @@ public class CommentServiceImpl implements CommentService {
     }
 
     @Override
-    @Transactional
     public void deleteById(String id) {
         commentRepository.deleteById(id);
     }

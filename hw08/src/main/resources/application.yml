@@ -23,4 +23,4 @@ mongock:
     read-concern: local
 logging:
   level:
-    root: info
+    root: error

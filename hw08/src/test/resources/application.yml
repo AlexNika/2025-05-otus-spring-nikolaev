@@ -28,6 +28,4 @@ mongock:
     read-concern: local
 logging:
   level:
-    root: info
-    de.flapdoodle.embed: DEBUG
-    org.springframework.data.mongodb: DEBUG
+    root: error
