@@ -1,0 +1,26 @@
+spring:
+  data:
+    mongodb:
+      authentication-database: admin
+      username: ${MONGODB_USER:root}
+      password: ${MONGODB_PASSWORD:mongodb_secret}
+      database: ${MONGODB_DATABASE:hw08-data-mongodb}
+      port: 27017
+      host: localhost
+      auto-index-creation: true
+  shell:
+    interactive:
+      enabled: true
+    script:
+      enabled: true
+mongock:
+  runner-type: "InitializingBean"
+  change-logs-scan-package:
+    - ru.otus.hw.mongock.changelog
+  mongo-db:
+    write-concern:
+      journal: false
+    read-concern: local
+logging:
+  level:
+    root: error
