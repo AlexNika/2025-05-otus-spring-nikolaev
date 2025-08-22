@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title th:text="'(HW-09) Список комментариев по книге / Каталог книг в библиотеке'">(HW-09) Список комментариев по книге / Каталог книг в библиотеке</title>
+    <link rel="stylesheet" th:href="@{/webjars/bootstrap/5.3.7/css/bootstrap.min.css}">
+</head>
+<body>
+<div class="container-fluid w-75 p-3">
+    <h1 class="text-start" th:text="'Список комментариев по книге &quot;' + ${bookTitle} + '&quot;'">Список комментариев
+        по книге</h1>
+
+    <div id="comments-container">
+        <table class="table table-hover table-bordered table-responsive-sm text-center shadow bg-body-tertiary rounded">
+            <thead>
+            <tr class="table-info">
+                <th scope="col">id</th>
+                <th scope="col">Комментарий</th>
+                <th scope="col">Редактировать</th>
+                <th scope="col">Удалить</th>
+            </tr>
+            </thead>
+            <tbody id="comments-table-body">
+            <tr><td colspan="4" class="text-center">Загрузка...</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="d-grid gap-2 d-md-block">
+        <a class="btn btn-outline-info me-1" th:href="@{/}" type="button">На главную</a>
+        <a class="btn btn-outline-info me-1" th:href="@{/books}" type="button">Книги</a>
+        <a class="btn btn-outline-info me-1" th:href="@{/authors}" type="button">Авторы</a>
+        <a class="btn btn-outline-info me-1" th:href="@{/genres}" type="button">Жанры</a>
+        <a class="ms-3 btn btn-outline-info" th:href="@{'/books/' + ${bookId} + '/comments/add'}" type="button">
+            Добавить комментарий
+        </a>
+    </div>
+</div>
+<script th:src="@{/webjars/bootstrap/5.3.7/js/bootstrap.bundle.min.js}"></script>
+<script th:src="@{/js/form-base.js}"></script>
+<script th:src="@{/js/comments.js}"></script>
+<script th:inline="javascript">
+    /*<![CDATA[*/
+    commentsManager.init(/*[[${bookId}]]*/);
+    /*]]>*/
+</script>
+</body>
+</html>
