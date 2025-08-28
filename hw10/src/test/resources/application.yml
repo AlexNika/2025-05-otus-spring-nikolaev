@@ -1,0 +1,21 @@
+spring:
+  datasource:
+    url: jdbc:h2:mem:hw09-test;MODE=PostgreSQL
+  jpa:
+    generate-ddl: false
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        format_sql: true
+    show-sql: false
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
+    baseline-version: 0
+  sql:
+    init:
+      mode: never
+logging:
+  level:
+    root: error

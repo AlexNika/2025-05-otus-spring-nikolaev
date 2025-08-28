@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+<div th:insert="~{fragments/head :: header('(HW-10) Error')}"></div>
+<body>
+<div class="container-fluid w-75 p-3">
+    <!--/*@thymesVar id="errorText" type="ru.otus.hw.controllers.page.MvcExceptionHandler"*/-->
+    <h2 th:text="${errorText}">Some error occurred. Sorry!</h2>
+    <div class="d-grid gap-2 d-md-block mx-auto">
+        <a class="btn btn-outline-info me-1" th:href="@{/}" type="button">На главную</a>
+        <a class="btn btn-outline-info me-1" th:href="@{/books}" type="button">Книги</a>
+        <a class="btn btn-outline-info me-1" th:href="@{/authors}" type="button">Авторы</a>
+        <a class="btn btn-outline-info me-1" th:href="@{/genres}" type="button">Жанры</a>
+    </div>
+</div>
+<script th:src="@{/webjars/bootstrap/5.3.7/js/bootstrap.bundle.min.js}"></script>
+</body>
+</html>
