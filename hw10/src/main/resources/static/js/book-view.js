@@ -3,7 +3,7 @@ class BookViewManager extends FormBase {
         super();
         this.apiUrl = '/api/v1/books';
         this.genreApiUrl = '/api/v1/genres';
-        this.commentApiUrl = '/api/v1/books';
+        this.commentApiUrl = '/api/v1/comments';
         this.bookId = null;
         this.previousUrl = '/books';
     }
@@ -55,7 +55,7 @@ class BookViewManager extends FormBase {
                     throw new Error('Ошибка загрузки данных книги');
                 }
             }),
-            fetch(`${this.commentApiUrl}/${this.bookId}/comments`).then(response => {
+            fetch(`${this.commentApiUrl}?bookId=${this.bookId}`).then(response => {
                 if (response.ok) {
                     return response.json();
                 } else {
@@ -219,7 +219,7 @@ class BookViewManager extends FormBase {
 
     deleteComment(commentId) {
         if (confirm('Вы уверены, что хотите удалить комментарий?')) {
-            fetch(`${this.commentApiUrl}/${this.bookId}/comments/${commentId}`, {
+            fetch(`/api/v1/comments/${commentId}`, {
                 method: 'DELETE'
             })
                 .then(response => {

@@ -9,6 +9,7 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
+import ru.otus.hw.dto.CommentCreateDto;
 import ru.otus.hw.dto.CommentDto;
 import ru.otus.hw.dto.CommentMinDto;
 import ru.otus.hw.exceptions.EntityNotFoundException;
@@ -70,7 +71,7 @@ class CommentRestControllerTest {
         when(commentService.findByBookId(PRESENT_ID)).thenReturn(comments);
 
         //Then
-        mockMvc.perform(get("/api/v1/books/{bookId}/comments", PRESENT_ID))
+        mockMvc.perform(get("/api/v1/comments?bookId={bookId}", PRESENT_ID))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.length()").value(1))
@@ -87,7 +88,7 @@ class CommentRestControllerTest {
         when(commentService.findById(PRESENT_ID)).thenReturn(java.util.Optional.of(commentDto));
 
         //Then
-        mockMvc.perform(get("/api/v1/books/{bookId}/comments/{commentId}", PRESENT_ID, PRESENT_ID))
+        mockMvc.perform(get("/api/v1/comments/{id}", PRESENT_ID))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.id").value(PRESENT_ID))
@@ -105,7 +106,7 @@ class CommentRestControllerTest {
         when(commentService.findById(MISSING_ID)).thenReturn(java.util.Optional.empty());
 
         //Then
-        mockMvc.perform(get("/api/v1/books/{bookId}/comments/{commentId}", PRESENT_ID, MISSING_ID))
+        mockMvc.perform(get("/api/v1/comments/{id}", MISSING_ID))
                 .andExpect(status().isNotFound());
 
         verify(commentService, times(1)).findById(MISSING_ID);
@@ -115,14 +116,21 @@ class CommentRestControllerTest {
     @Test
     void whenCreateValidComment_thenReturnsCreatedComment() throws Exception {
         //Given
-        CommentMinDto newCommentDto = new CommentMinDto(null, "New Comment");
-        CommentDto createdCommentDto = CommentDto.builder().id(PRESENT_ID).text("New Comment").book(book).build();
+        CommentCreateDto newCommentDto = CommentCreateDto.builder()
+                .text("New Comment")
+                .bookId(PRESENT_ID)
+                .build();
+        CommentDto createdCommentDto = CommentDto.builder()
+                .id(PRESENT_ID)
+                .text("New Comment")
+                .book(book)
+                .build();
 
         //When
         when(commentService.insert(anyString(), anyLong())).thenReturn(createdCommentDto);
 
         //Then
-        mockMvc.perform(post("/api/v1/books/{bookId}/comments", PRESENT_ID)
+        mockMvc.perform(post("/api/v1/comments")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(newCommentDto)))
                 .andExpect(status().isOk())
@@ -140,7 +148,7 @@ class CommentRestControllerTest {
         CommentMinDto invalidCommentDto = new CommentMinDto(null, "");
 
         //Then
-        mockMvc.perform(post("/api/v1/books/{bookId}/comments", PRESENT_ID)
+        mockMvc.perform(post("/api/v1/comments?bookId={bookId}", PRESENT_ID)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(invalidCommentDto)))
                 .andExpect(status().isBadRequest());
@@ -159,7 +167,7 @@ class CommentRestControllerTest {
         when(commentService.update(anyLong(), anyString())).thenReturn(updatedCommentResult);
 
         //Then
-        mockMvc.perform(put("/api/v1/books/{bookId}/comments/{commentId}", PRESENT_ID, PRESENT_ID)
+        mockMvc.perform(put("/api/v1/comments/{id}", PRESENT_ID, PRESENT_ID)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(updatedCommentDto)))
                 .andExpect(status().isOk())
@@ -177,7 +185,7 @@ class CommentRestControllerTest {
         CommentMinDto invalidCommentDto = new CommentMinDto(PRESENT_ID, "");
 
         //Then
-        mockMvc.perform(put("/api/v1/books/{bookId}/comments/{commentId}", PRESENT_ID, PRESENT_ID)
+        mockMvc.perform(put("/api/v1/comments/{id}", PRESENT_ID, PRESENT_ID)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(invalidCommentDto)))
                 .andExpect(status().isBadRequest());
@@ -192,7 +200,7 @@ class CommentRestControllerTest {
         doNothing().when(commentService).deleteById(PRESENT_ID);
 
         //Then
-        mockMvc.perform(delete("/api/v1/books/{bookId}/comments/{commentId}", PRESENT_ID, PRESENT_ID))
+        mockMvc.perform(delete("/api/v1/comments/{id}", PRESENT_ID, PRESENT_ID))
                 .andExpect(status().isNoContent());
 
         verify(commentService, times(1)).deleteById(PRESENT_ID);
@@ -205,7 +213,7 @@ class CommentRestControllerTest {
         doThrow(new EntityNotFoundException("Comment not found")).when(commentService).deleteById(MISSING_ID);
 
         //Then
-        mockMvc.perform(delete("/api/v1/books/{bookId}/comments/{commentId}", PRESENT_ID, MISSING_ID))
+        mockMvc.perform(delete("/api/v1/comments/{id}", MISSING_ID))
                 .andExpect(status().isNotFound());
 
         verify(commentService, times(1)).deleteById(MISSING_ID);

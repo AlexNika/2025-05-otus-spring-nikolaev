@@ -1,7 +1,7 @@
 class CommentFormManager extends FormBase {
     constructor() {
         super();
-        this.apiUrl = '/api/v1/books';
+        this.apiUrl = '/api/v1/comments';
         this.isUpdate = false;
         this.bookId = null;
         this.commentId = null;
@@ -44,12 +44,11 @@ class CommentFormManager extends FormBase {
         }
 
         const method = this.isUpdate ? 'PUT' : 'POST';
-        const url = this.isUpdate ?
-            `${this.apiUrl}/${this.bookId}/comments/${this.commentId}` :
-            `${this.apiUrl}/${this.bookId}/comments`;
+        const url = this.isUpdate ? `${this.apiUrl}/${this.commentId}` : this.apiUrl;
 
         const data = {
-            text: text.trim()
+            text: text.trim(),
+            bookId: this.bookId
         };
 
         this.handleFormSubmit(url, method, data, 'text').then(result => {

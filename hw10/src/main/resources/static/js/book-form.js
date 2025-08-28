@@ -28,7 +28,7 @@ class BookFormManager extends FormBase {
     }
 
     loadAuthorsAndGenres() {
-        fetch('/api/v1/books/authors')
+        fetch('/api/v1/authors')
             .then(response => response.json())
             .then(authors => {
                 const authorSelect = document.getElementById('bookAuthorInput');
@@ -59,7 +59,7 @@ class BookFormManager extends FormBase {
                 this.showFieldError('authorId', 'Ошибка загрузки списка авторов');
             });
 
-        fetch('/api/v1/books/genres')
+        fetch('/api/v1/genres')
             .then(response => response.json())
             .then(genres => {
                 const genreSelect = document.getElementById('bookGenreInput');

@@ -70,14 +70,4 @@ public class BookRestController {
         bookService.deleteById(id);
         return ResponseEntity.noContent().build();
     }
-
-    @GetMapping("/authors")
-    public ResponseEntity<List<ru.otus.hw.dto.AuthorDto>> getAllAuthors() {
-        return ResponseEntity.ok(authorService.findAll());
-    }
-
-    @GetMapping("/genres")
-    public ResponseEntity<List<ru.otus.hw.dto.GenreDto>> getAllGenres() {
-        return ResponseEntity.ok(genreService.findAll());
-    }
 }

@@ -12,8 +12,8 @@
     <groupId>ru.otus.hw</groupId>
     <artifactId>hw10-Ajax</artifactId>
     <version>0.0.1-SNAPSHOT</version>
-    <name>HW09 - Introduction to Spring MVC, Spring MVC View on Spring Boot</name>
-    <description>OTUS Spring-2025-05 homework09</description>
+    <name>HW10 - Modern Spring MVC Applications</name>
+    <description>OTUS Spring-2025-05 homework10</description>
     <developers>
         <developer>
             <name>Alexander Nikolaev</name>

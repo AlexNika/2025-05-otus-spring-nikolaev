@@ -1,7 +1,7 @@
 class CommentsManager extends FormBase {
     constructor() {
         super();
-        this.apiUrl = '/api/v1/books';
+        this.apiUrl = '/api/v1/comments';
         this.bookId = null;
     }
 
@@ -13,7 +13,7 @@ class CommentsManager extends FormBase {
     }
 
     loadComments() {
-        fetch(`${this.apiUrl}/${this.bookId}/comments`)
+        fetch(`${this.apiUrl}?bookId=${this.bookId}`)
             .then(response => response.json())
             .then(comments => {
                 const tbody = document.getElementById('comments-table-body');
@@ -68,7 +68,7 @@ class CommentsManager extends FormBase {
 
     deleteComment(commentId) {
         if (confirm('Вы уверены, что хотите удалить комментарий?')) {
-            fetch(`${this.apiUrl}/${this.bookId}/comments/${commentId}`, {
+            fetch(`${this.apiUrl}/${commentId}`, {
                 method: 'DELETE'
             })
                 .then(response => {

@@ -40,7 +40,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @DisplayName("REST контроллер для работы с книгами ")
-@WebMvcTest(BookRestController.class)
+@WebMvcTest({BookRestController.class, AuthorRestController.class, GenreRestController.class})
 class BookRestControllerTest {
 
     private static final Long MISSING_ID = 42L;
@@ -247,7 +247,7 @@ class BookRestControllerTest {
         when(authorService.findAll()).thenReturn(authors);
 
         //Then
-        mockMvc.perform(get("/api/v1/books/authors"))
+        mockMvc.perform(get("/api/v1/authors"))  // Изменено!
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.length()").value(1))
@@ -267,7 +267,7 @@ class BookRestControllerTest {
         when(genreService.findAll()).thenReturn(genres);
 
         //Then
-        mockMvc.perform(get("/api/v1/books/genres"))
+        mockMvc.perform(get("/api/v1/genres"))  // Изменено!
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.length()").value(1))

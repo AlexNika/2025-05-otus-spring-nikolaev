@@ -1,7 +1,7 @@
 class CommentViewManager extends FormBase {
     constructor() {
         super();
-        this.apiUrl = '/api/v1/books';
+        this.apiUrl = '/api/v1/comments';
         this.bookId = null;
         this.commentId = null;
         this.previousUrl = `/books`;
@@ -20,7 +20,7 @@ class CommentViewManager extends FormBase {
     }
 
     loadCommentDetails() {
-        fetch(`${this.apiUrl}/${this.bookId}/comments/${this.commentId}`)
+        fetch(`${this.apiUrl}/${this.commentId}`)
             .then(response => {
                 if (response.ok) {
                     return response.json();
@@ -80,7 +80,7 @@ class CommentViewManager extends FormBase {
 
     deleteComment() {
         if (confirm('Вы уверены, что хотите удалить комментарий?')) {
-            fetch(`${this.apiUrl}/${this.bookId}/comments/${this.commentId}`, {
+            fetch(`${this.apiUrl}/${this.commentId}`, {
                 method: 'DELETE'
             })
                 .then(response => {
