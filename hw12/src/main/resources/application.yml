@@ -1,0 +1,46 @@
+spring:
+  messages:
+    encoding: UTF-8
+  datasource:
+    url: jdbc:h2:mem:hw12;MODE=PostgreSQL
+  jpa:
+    generate-ddl: false
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        format_sql: true
+    show-sql: true
+    open-in-view: true
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
+      settings:
+        web-allow-others: true
+        trace: true
+  shell:
+    interactive:
+      enabled: true
+    script:
+      enabled: true
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
+    baseline-version: 0
+  sql:
+    init:
+      mode: never
+  thymeleaf:
+    cache: false
+  mvc:
+    hiddenmethod:
+      filter:
+        enabled: true
+logging:
+  level:
+    org:
+      springframework.orm.jpa: info
+      thymeleaf:
+        info
+    root: info
