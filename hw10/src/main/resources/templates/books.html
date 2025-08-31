@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title th:text="'(HW-09) Список книг / Каталог книг в библиотеке'">(HW-09) Список книг / Каталог книг в библиотеке</title>
+    <link rel="stylesheet" th:href="@{/webjars/bootstrap/5.3.7/css/bootstrap.min.css}">
+</head>
+<body>
+<div class="container-fluid w-75 p-3">
+    <h1 class="text-start">Список книг</h1>
+    <div id="books-container">
+        <table class="table table-hover table-bordered table-responsive-sm text-center shadow bg-body-tertiary rounded">
+            <thead>
+            <tr class="table-info">
+                <th scope="col">id</th>
+                <th scope="col">Название книги</th>
+                <th scope="col">Автор</th>
+                <th scope="col">Жанры</th>
+                <th scope="col">Комментарии</th>
+            </tr>
+            </thead>
+            <tbody id="books-table-body">
+            <tr><td colspan="5" class="text-center">Загрузка...</td></tr>
+            </tbody>
+        </table>
+    </div>
+    <div class="d-grid gap-2 d-md-block">
+        <a class="btn btn-outline-info me-1" th:href="@{/}" type="button">На главную</a>
+        <a class="btn btn-outline-info me-1" th:href="@{/authors}" type="button">Авторы</a>
+        <a class="btn btn-outline-info me-1" th:href="@{/genres}" type="button">Жанры</a>
+        <a class="ms-3 btn btn-outline-info" th:href="@{/books/add}" type="button">Добавить книгу</a>
+    </div>
+</div>
+<script th:src="@{/webjars/bootstrap/5.3.7/js/bootstrap.bundle.min.js}"></script>
+<script th:src="@{/js/form-base.js}"></script>
+<script th:src="@{/js/books.js}"></script>
+<script>
+    booksManager.init();
+</script>
+</body>
+</html>
