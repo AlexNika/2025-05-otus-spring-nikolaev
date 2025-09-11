@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+<div th:insert="~{fragments/head :: header('(HW-09) Список комментариев по книге / Каталог книг в библиотеке')}"></div>
+<body>
+<div class="container-fluid w-75 p-3">
+    <h1 class="text-start" th:text="'Список комментариев по книге &quot;' + ${bookTitle} + '&quot;'">Список комментариев
+        по книге</h1>
+    <div th:insert="~{fragments/tables.html :: comments-table}"></div>
+    <div class="d-grid gap-2 d-md-block">
+        <a class="btn btn-outline-info me-1" th:href="@{/}" type="button"><i class="bi bi-house-door"></i> На главную</a>
+        <a class="btn btn-outline-info me-1" th:href="@{/books}" type="button"><i class="bi bi-book"></i> Книги</a>
+        <a class="btn btn-outline-info me-1" th:href="@{/authors}" type="button"><i class="bi bi-pencil"></i> Авторы</a>
+        <a class="btn btn-outline-info me-1" th:href="@{/genres}" type="button"><i class="bi bi-collection"></i> Жанры</a>
+        <a class="ms-3 btn btn-outline-info" th:href="@{'/books/' + ${bookId} + '/comments/add'}" type="button">
+            <i class="bi bi-plus"></i> Добавить комментарий
+        </a>
+    </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

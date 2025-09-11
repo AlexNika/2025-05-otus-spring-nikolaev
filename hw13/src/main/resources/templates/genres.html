@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+<div th:insert="~{fragments/head :: header('(HW-09) Список жанров / Каталог книг в библиотеке')}"></div>
+<body>
+<div class="container-fluid w-75 p-3">
+    <h1 class="text-start">Список жанров</h1>
+    <!--    <div th:insert="fragments/tables :: genres-table"></div>-->
+    <div th:insert="~{fragments/tables.html :: genres-table}"></div>
+    <div class="d-grid gap-2 d-md-block">
+        <a class="btn btn-outline-info me-1" th:href="@{/}" type="button">На главную</a>
+        <a class="btn btn-outline-info me-1" th:href="@{/books}" type="button">Книги</a>
+        <a class="btn btn-outline-info me-1" th:href="@{/authors}" type="button">Авторы</a>
+        <a class="ms-3 btn btn-outline-info" th:href="@{/genres/add}" type="button">Добавить жанр</a>
+    </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
