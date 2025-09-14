@@ -1,0 +1,42 @@
+# Тестовая конфигурация
+spring:
+  datasource:
+    url: jdbc:h2:mem:test-h2-db
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+  jpa:
+    database-platform: org.hibernate.dialect.H2Dialect
+    generate-ddl: false
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: true
+  batch:
+    job:
+      enabled: false
+  output:
+    ansi:
+      enabled: ALWAYS
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+  data:
+    mongodb:
+      database: test-mongo-db
+      port: 27017
+      host: localhost
+      auto-index-creation: true
+      authentication-database: admin
+de:
+  flapdoodle:
+    mongodb:
+      embedded:
+        version: 6.0.5
+logging:
+  level:
+    ru.otus.hw: DEBUG
+    de.flapdoodle.embed: DEBUG
+    org.springframework.data.mongodb: DEBUG
