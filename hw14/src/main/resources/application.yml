@@ -1,0 +1,69 @@
+spring:
+  application:
+    name: HW14-SpringBatch
+  main:
+    allow-circular-references: true
+  batch:
+    job:
+      enabled: false
+    jdbc:
+      initialize-schema: always
+  output:
+    ansi:
+      enabled: ALWAYS
+  shell:
+    interactive:
+      enabled: true
+    noninteractive:
+      enabled: false
+    command:
+      version:
+        enabled: false
+  data:
+    mongodb:
+      authentication-database: admin
+      username: ${MONGODB_USER:root}
+      password: ${MONGODB_PASSWORD:mongodb_secret}
+      database: ${MONGODB_DATABASE:hw14-data-mongodb}
+      port: 27017
+      host: localhost
+      auto-index-creation: true
+  datasource:
+    url: jdbc:h2:mem:hw14
+    driverClassName: org.h2.Driver
+    username: sa
+    password:
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
+      settings:
+        web-allow-others: true
+        trace: true
+  jpa:
+    database-platform: org.hibernate.dialect.H2Dialect
+    generate-ddl: false
+    hibernate:
+      ddl-auto: validate
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    baseline-on-migrate: true
+batch:
+  job:
+    auto-run: false
+  writer:
+    threads:
+      authors: 4
+      genres: 2
+      comments: 4
+      books: 4
+logging:
+  level:
+    root: INFO
+    Batch: INFO
+    ru.otus.hw.hw14: INFO
