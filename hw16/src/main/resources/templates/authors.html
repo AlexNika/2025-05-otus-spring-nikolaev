@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+<div th:insert="~{fragments/head :: header('(HW-16) Список авторов / Каталог книг в библиотеке')}"></div>
+<body>
+<div class="container-fluid w-75 p-3">
+    <h1 class="text-start">Список авторов</h1>
+    <table class="table table-hover table-bordered table-responsive-sm text-center shadow bg-body-tertiary rounded">
+        <thead>
+        <tr class="table-info">
+            <th scope="col">id</th>
+            <th scope="col">Автор</th>
+            <th scope="col">Написанные автором книги</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="author : ${authorsAndTheirBooks.keySet()}" th:object="${author}">
+            <!--/*@thymesVar id="id" type="ru.otus.hw.controllers.AuthorController"*/-->
+            <th scope="row" th:text="*{id}"></th>
+            <td class="text-start">
+                <a href="author-view.html" th:href="@{/authors/{authorId}/details(authorId=${author.id})}"
+                   th:text="*{fullName}"></a>
+            </td>
+            <td class="text-start">
+                <div th:each="book : ${authorsAndTheirBooks.get(author)}">
+                    <div>
+                        <a href="book-view.html" th:href="@{/books/{bookId}/details(bookId=${book.getKey()})}"
+                           th:text="${book.getValue()}"></a>
+                    </div>
+                </div>
+            </td>
+        </tr>
+        </tbody>
+    </table>
+    <div class="d-grid gap-2 d-md-block">
+        <a class="btn btn-outline-info me-1" th:href="@{/}" type="button"><i class="bi bi-house-door"></i> На главную</a>
+        <a class="btn btn-outline-info me-1" th:href="@{/books}" type="button"><i class="bi bi-book"></i> Книги</a>
+        <a class="btn btn-outline-info me-1" th:href="@{/genres}" type="button"><i class="bi bi-collection"></i> Жанры</a>
+        <a class="ms-3 btn btn-outline-info" th:href="@{/authors/add}" type="button"><i class="bi bi-plus"></i> Добавить автора</a>
+    </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

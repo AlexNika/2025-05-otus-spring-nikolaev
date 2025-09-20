@@ -1,0 +1,153 @@
+package ru.otus.hw.models;
+
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.JoinTable;
+import jakarta.persistence.ManyToMany;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.NamedAttributeNode;
+import jakarta.persistence.NamedEntityGraph;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.PrePersist;
+import jakarta.persistence.SequenceGenerator;
+import jakarta.persistence.Table;
+import jakarta.validation.constraints.NotBlank;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.Fetch;
+import org.hibernate.annotations.FetchMode;
+import org.hibernate.annotations.UpdateTimestamp;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Objects;
+
+@Entity
+@Getter
+@Setter
+@AllArgsConstructor
+@NoArgsConstructor
+@Table(name = "books")
+@NamedEntityGraph(name = "book-author-genres",
+        attributeNodes = {@NamedAttributeNode("author"),
+                @NamedAttributeNode("genres")})
+public class Book {
+    @Id
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "book_seq_gen")
+    @SequenceGenerator(name = "book_seq_gen", sequenceName = "book_seq", allocationSize = 1)
+    private Long id;
+
+    @NotBlank(message = "Book title can't be blank")
+    @Column(name = "title", nullable = false)
+    private String title;
+
+    @Column(name = "created_by")
+    private String createdBy;
+
+    @ManyToOne(fetch = FetchType.LAZY, cascade = {CascadeType.PERSIST, CascadeType.MERGE})
+    @JoinColumn(name = "author_id", nullable = false)
+    private Author author;
+
+    @ManyToMany(fetch = FetchType.LAZY,
+            cascade = {
+                    CascadeType.PERSIST,
+                    CascadeType.MERGE
+            }
+    )
+    @JoinTable(name = "books_genres",
+            joinColumns = @JoinColumn(name = "book_id"),
+            inverseJoinColumns = @JoinColumn(name = "genre_id"))
+    @Fetch(FetchMode.SUBSELECT)
+    private List<Genre> genres;
+
+    @OneToMany(mappedBy = "book", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
+    @Fetch(FetchMode.SUBSELECT)
+    private List<Comment> comments;
+
+    @CreationTimestamp
+    @Column(updatable = false, nullable = false)
+    private LocalDateTime created;
+
+    @UpdateTimestamp
+    @Column(nullable = false)
+    private LocalDateTime updated;
+
+    public Book(String title, Author author, List<Genre> genres) {
+        this.title = title;
+        this.author = author;
+        this.genres = genres;
+    }
+
+    public Book(Long id, String title, Author author, List<Genre> genres) {
+        this.id = id;
+        this.title = title;
+        this.author = author;
+        this.genres = genres;
+    }
+
+    public Book(String title, Author author, List<Genre> genres, List<Comment> comments) {
+        this.title = title;
+        this.author = author;
+        this.genres = genres;
+        this.comments = comments;
+    }
+
+    public Book(Long id, String title, Author author, List<Genre> genres, List<Comment> comments) {
+        this.id = id;
+        this.title = title;
+        this.author = author;
+        this.genres = genres;
+        this.comments = comments;
+    }
+
+    @PrePersist
+    public void prePersist() {
+        if (createdBy == null) {
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            if (authentication != null) {
+                createdBy = authentication.getName();
+            } else {
+                createdBy = "system";
+            }
+        }
+    }
+
+    @Override
+    public final boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+        Book book = (Book) o;
+        if (id == null) {
+            return Objects.equals(title, book.title) &&
+                   Objects.equals(author, book.author);
+        }
+        return Objects.equals(id, book.id);
+    }
+
+    @Override
+    public final int hashCode() {
+        return id == null ? Objects.hash(title, author) : Objects.hash(id);
+    }
+
+    @Override
+    public String toString() {
+        return getClass().getSimpleName() + "(" +
+               "id = " + id + ", " +
+               "title = " + title + ")";
+    }
+}
