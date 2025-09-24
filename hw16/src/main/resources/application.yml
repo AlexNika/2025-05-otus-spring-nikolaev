@@ -44,14 +44,20 @@ spring:
     enabled: true
 management:
   endpoints:
+    access:
+      default: read_only
     web:
       exposure:
         include: "*"
   endpoint:
+    logfile:
+      access: read_only
     health:
       show-details: always
   health:
     defaults:
       enabled: true
 logging:
+  file:
+    name: ./logs/spring-boot-logger.log
   config: classpath:logback.xml
