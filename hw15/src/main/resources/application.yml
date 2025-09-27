@@ -1,0 +1,12 @@
+spring:
+  application:
+    name: hw15
+  shell:
+    interactive:
+      enabled: true
+    script:
+      enabled: true
+logging:
+  level:
+    ru.otus.hw: ERROR
+    org.springframework.integration: ERROR
