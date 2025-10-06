@@ -1,0 +1,45 @@
+services:
+  library-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://library-db:5432/${PG_DATABASE}
+      - SPRING_DATASOURCE_USERNAME=${PG_USERNAME}
+      - SPRING_DATASOURCE_PASSWORD=${PG_PASSWORD}
+    depends_on:
+      - library-db
+    networks:
+      - hw17-network
+
+  library-db:
+    image: "postgres:17"
+    restart: unless-stopped
+    shm_size: 128mb
+    env_file:
+      - /.env
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_USER=${PG_USERNAME}
+      - POSTGRES_PASSWORD=${PG_PASSWORD}
+      - POSTGRES_DB=${PG_DATABASE}
+    volumes:
+      - hw17_postgres_data:/var/lib/postgresql/data
+    networks:
+      - hw17-network
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U postgres" ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  hw17_postgres_data:
+
+networks:
+  hw17-network:
+    driver: bridge
+    name: hw17-network
