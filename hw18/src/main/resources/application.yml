@@ -1,0 +1,87 @@
+server:
+  port: 8080
+spring:
+  messages:
+    encoding: UTF-8
+  datasource:
+    url: jdbc:h2:mem:hw18
+  jpa:
+    generate-ddl: false
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        format_sql: true
+    show-sql: true
+    open-in-view: true
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
+      settings:
+        web-allow-others: true
+        trace: true
+  shell:
+    interactive:
+      enabled: true
+    script:
+      enabled: true
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
+    baseline-version: 0
+  sql:
+    init:
+      mode: never
+  thymeleaf:
+    cache: false
+  mvc:
+    hiddenmethod:
+      filter:
+        enabled: true
+  application:
+    name: HW18Application
+resilience4j:
+  circuitbreaker:
+    configs:
+      default:
+        sliding-window-size: 10
+        sliding-window-type: COUNT_BASED
+        minimum-number-of-calls: 5
+        automatic-transition-from-open-to-half-open-enabled: true
+        wait-duration-in-open-state: 5s
+        failure-rate-threshold: 50
+        permitted-number-of-calls-in-half-open-state: 3
+        event-consumer-buffer-size: 50
+        register-health-indicator: true
+    instances:
+      bookService:
+        base-config: default
+      authorService:
+        base-config: default
+      genreService:
+        base-config: default
+      commentService:
+        base-config: default
+      userService:
+        base-config: default
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,metrics, circuitbreakers
+  endpoint:
+    health:
+      show-details: always
+    circuitbreakers:
+      enabled: true
+    ratelimiters:
+      enabled: true
+logging:
+  level:
+    ru.otus.hw: debug
+    org:
+      springframework.orm.jpa: info
+      thymeleaf:
+        info
+    root: info

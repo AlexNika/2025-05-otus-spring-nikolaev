@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+<div th:insert="~{fragments/head :: header('(HW-09) Список книг / Каталог книг в библиотеке')}"></div>
+<body>
+<div class="container-fluid w-75 p-3">
+    <h1 class="text-start">Список книг</h1>
+    <table class="table table-hover table-bordered table-responsive-sm text-center shadow bg-body-tertiary rounded">
+        <thead>
+        <tr class="table-info">
+            <th scope="col">id</th>
+            <th scope="col">Название книги</th>
+            <th scope="col">Автор</th>
+            <th scope="col">Жанры</th>
+            <th scope="col">Комментарии</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="book : ${books}" th:object="${book}">
+            <th scope="row" th:text="*{id}"></th>
+            <td class="text-start">
+                <a class="link-offset-2 link-offset-3-hover link-underline link-underline-opacity-0 link-underline-opacity-75-hover"
+                   href="book-view.html"
+                   th:href="@{/books/{bookId}/details(bookId=*{id})}"
+                   th:text="*{title}">
+                </a>
+            </td>
+            <td class="text-start">
+                <a class="link-offset-2 link-offset-3-hover link-underline link-underline-opacity-0 link-underline-opacity-75-hover"
+                   href="author-view.html"
+                   th:href="@{/authors/{authorId}/details(authorId=*{author.id})}"
+                   th:text="*{author.fullName}">
+                </a>
+            </td>
+            <td class="text-start">
+                <div th:each="genre : *{genres}">
+                    <div>
+                        <a href="genre-view.html" th:href="@{/genres/{genreId}/details(genreId=${genre.id})}"
+                           th:text="${genre.name}"></a>
+                    </div>
+                </div>
+            </td>
+            <td class="text-start">
+                <a class="link-offset-2 link-offset-3-hover link-underline link-underline-opacity-0 link-underline-opacity-75-hover"
+                   href="comments.html"
+                   th:href="@{/books/{bookId}/comments(bookId=*{id})}">
+                    Список комментариев
+                </a>
+            </td>
+        </tr>
+        </tbody>
+    </table>
+    <div class="d-grid gap-2 d-md-block">
+        <a class="btn btn-outline-info me-1" th:href="@{/}" type="button"><i class="bi bi-house-door"></i> На главную</a>
+        <a class="btn btn-outline-info me-1" th:href="@{/authors}" type="button"><i class="bi bi-pencil"></i> Авторы</a>
+        <a class="btn btn-outline-info me-1" th:href="@{/genres}" type="button"><i class="bi bi-collection"></i> Жанры</a>
+        <a class="ms-3 btn btn-outline-info" th:href="@{/books/add}" type="button"><i class="bi bi-plus"></i> Добавить книгу</a>
+    </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

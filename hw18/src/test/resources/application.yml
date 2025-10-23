@@ -1,0 +1,47 @@
+spring:
+  datasource:
+    url: jdbc:h2:mem:hw18-test;MODE=PostgreSQL
+  jpa:
+    generate-ddl: false
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        format_sql: true
+    show-sql: false
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
+    baseline-version: 0
+  sql:
+    init:
+      mode: never
+  cloud:
+    circuitbreaker:
+      resilience4j:
+        enabled: true
+resilience4j:
+  circuitbreaker:
+    configs:
+      default:
+        register-health-indicator: true
+        sliding-window-size: 5
+        minimum-number-of-calls: 3
+        automatic-transition-from-open-to-half-open-enabled: true
+        wait-duration-in-open-state: 1s
+        failure-rate-threshold: 50
+        permitted-number-of-calls-in-half-open-state: 2
+        event-consumer-buffer-size: 10
+        ignore-exceptions:
+          - "ru.otus.hw.exceptions.EntityNotFoundException"
+    instances:
+      bookService:
+        base-config: default
+      commentService:
+        base-config: default
+logging:
+  level:
+    root: error
+    ru.otus.hw.services: debug
+    org.springframework.cloud.circuitbreaker: debug
+    io.github.resilience4j: warn
