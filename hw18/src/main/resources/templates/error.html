@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta content="text/html; charset=UTF-8" http-equiv="Content-Type"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+    <title>(HW-18) Error</title>
+</head>
+<body>
+<div class="container-fluid w-75 p-3">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="alert alert-danger text-center" role="alert">
+                <h2 th:text="${errorText}">Some error occurred. Sorry!</h2>
+            </div>
+
+            <div class="d-grid gap-2 d-md-block mx-auto text-center">
+                <a class="btn btn-outline-primary me-1" th:href="@{/}" type="button">
+                    <i class="bi bi-house-door"></i> На главную
+                </a>
+                <a class="btn btn-outline-success me-1" th:href="@{/books}" type="button">
+                    <i class="bi bi-book"></i> Книги
+                </a>
+                <a class="btn btn-outline-info me-1" th:href="@{/authors}" type="button">
+                    <i class="bi bi-pencil"></i> Авторы
+                </a>
+                <a class="btn btn-outline-warning me-1" th:href="@{/genres}" type="button">
+                    <i class="bi bi-collection"></i> Жанры
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
