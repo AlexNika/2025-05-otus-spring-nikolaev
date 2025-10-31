@@ -1,0 +1,88 @@
+server:
+  port: 8081
+
+app:
+  security:
+    login-attempts:
+      max: 3
+    token-blacklist:
+      ttl-minutes: 65
+
+spring:
+  application:
+    name: auth-service
+  banner:
+    location: classpath:/banner.txt
+  messages:
+    baseName: messages
+    encoding: UTF-8
+    fallbackToSystemLocale: false
+    cache-duration: 3600
+  r2dbc:
+    url: r2dbc:postgresql://localhost:5433/auth_db
+    username: auth_user
+    password: auth_pass
+  datasource:
+    url: jdbc:postgresql://localhost:5433/auth_db
+    username: auth_user
+    password: auth_pass
+    driver-class-name: org.postgresql.Driver
+  flyway:
+    enabled: true
+    url: jdbc:postgresql://localhost:5433/auth_db
+    locations: classpath:db/migration
+    baseline-on-migrate: true
+    validate-on-migrate: true
+  cloud:
+    config:
+      uri: http://localhost:8888
+      fail-fast: true
+      retry:
+        initial-interval: 5000
+        max-attempts: 3
+        max-interval: 5000
+        multiplier: 1.2
+  config:
+    import: "optional:configserver:http://localhost:8888"
+  cache:
+    type: caffeine
+    caffeine:
+      spec: initialCapacity=1000,maximumSize=10000,expireAfterWrite=10m
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health, info, metrics
+      base-path: /actuator
+  endpoint:
+    health:
+      show-details: always
+    info:
+      access: read_only
+  server:
+    port: 8082
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+  api-docs:
+    path: /v3/api-docs
+  show-actuator: true
+  packages-to-scan: ru.pricat.controller
+
+logging:
+  level:
+    ru.pricat: DEBUG
+    org.flywaydb: DEBUG
+    org.springframework.web: DEBUG
+    org.springframework.jdbc: DEBUG
+    org.springframework.security: DEBUG
+    org.springframework.cloud.config: DEBUG
+    org.springframework.r2dbc: DEBUG
+    io.r2dbc: DEBUG

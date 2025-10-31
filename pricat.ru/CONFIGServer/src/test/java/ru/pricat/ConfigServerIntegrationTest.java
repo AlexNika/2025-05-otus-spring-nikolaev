@@ -27,7 +27,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 class ConfigServerIntegrationTest {
 
     @ServiceConnection
-    static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:17");
+    static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:latest");
 
     static {
         postgres.start();
