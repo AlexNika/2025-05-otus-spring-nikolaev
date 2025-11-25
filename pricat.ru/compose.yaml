@@ -3,14 +3,17 @@ services:
     image: postgres:latest
     restart: unless-stopped
     container_name: config-server
+    hostname: configserver
     environment:
-      POSTGRES_DB: config_db
-      POSTGRES_USER: config_user
-      POSTGRES_PASSWORD: config_pass
+      POSTGRES_DB: ${CONFIGSERVER_PG_DATABASE:-config_db}
+      POSTGRES_USER: ${CONFIGSERVER_PG_USERNAME:-config_user}
+      POSTGRES_PASSWORD: ${CONFIGSERVER_PG_PASSWORD:-config_pass}
     ports:
       - "5432:5432"
     volumes:
       - postgres_config_data:/var/lib/postgresql/data
+    networks:
+      - pricat-network
     healthcheck:
       test: [ "CMD-SHELL", "pg_isready -U config_user -d config_db" ]
       interval: 10s
@@ -21,20 +24,121 @@ services:
     image: postgres:latest
     restart: unless-stopped
     container_name: auth-service
+    hostname: authservice
     environment:
-      POSTGRES_DB: auth_db
-      POSTGRES_USER: auth_user
-      POSTGRES_PASSWORD: auth_pass
+      POSTGRES_DB: ${AUTHSERVICE_PG_DATABASE:-auth_db}
+      POSTGRES_USER: ${AUTHSERVICE_PG_USERNAME:-auth_user}
+      POSTGRES_PASSWORD: ${AUTHSERVICE_PG_PASSWORD:-auth_pass}
     ports:
       - "5433:5432"
     volumes:
       - postgres_auth_data:/var/lib/postgresql/data
+    networks:
+      - pricat-network
     healthcheck:
       test: [ "CMD-SHELL", "pg_isready -U auth_user -d auth_db" ]
       interval: 10s
       timeout: 5s
       retries: 5
 
+  client-service:
+    image: postgres:latest
+    restart: unless-stopped
+    container_name: client-service
+    hostname: clientservice
+    environment:
+      POSTGRES_DB: ${CLIENTSERVICE_PG_DATABASE:-client_db}
+      POSTGRES_USER: ${CLIENTSERVICE_PG_USERNAME:-client_user}
+      POSTGRES_PASSWORD: ${CLIENTSERVICE_PG_PASSWORD:-client_pass}
+    ports:
+      - "5434:5432"
+    volumes:
+      - postgres_client_data:/var/lib/postgresql/data
+    networks:
+      - pricat-network
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U client_user -d client_db" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  etldata-service:
+    image: postgres:latest
+    restart: unless-stopped
+    container_name: etldata-service
+    hostname: etldataservice
+    shm_size: 128mb
+    environment:
+      POSTGRES_DB: ${ETLDATASERVICE_PG_DATABASE:-etldata_db}
+      POSTGRES_USER: ${ETLDATASERVICE_PG_USERNAME:-etldata_user}
+      POSTGRES_PASSWORD: ${ETLDATASERVICE_PG_PASSWORD:-etldata_pass}
+    ports:
+      - "5435:5432"
+    volumes:
+      - postgres_etl_data:/var/lib/postgresql/data
+    networks:
+      - pricat-network
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U postgres" ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  s3minio:
+    image: minio/minio:RELEASE.2025-04-22T22-12-26Z
+    container_name: s3minio
+    restart: unless-stopped
+    environment:
+      MINIO_ROOT_USER: ${S3_ROOT_USER:-admin}
+      MINIO_ROOT_PASSWORD: ${S3_ROOT_PASSWORD:-password123}
+      MINIO_REGION: ${S3_REGION:-ru-moscow-1}
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    command: server /data --console-address ":9001"
+    volumes:
+      - s3minio_data:/data
+      - s3minio-config:/root/.minio
+    networks:
+      - pricat-network
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:9000/minio/health/live" ]
+      interval: 30s
+      timeout: 20s
+      retries: 3
+
+  rabbitmq:
+    image: rabbitmq:4.1.3-management
+    restart: unless-stopped
+    container_name: rabbitmq
+    hostname: rabbitmq
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBIT_USERNAME:-guest}
+      RABBITMQ_DEFAULT_PASS: ${RABBIT_PASSWORD:-guest}
+      RABBITMQ_DEFAULT_VHOST: ${RABBIT_VIRTUAL_HOST:-/}
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    networks:
+      - pricat-network
+    healthcheck:
+      test: rabbitmq-diagnostics -q ping
+      interval: 30s
+      timeout: 30s
+      retries: 3
+
 volumes:
   postgres_config_data:
   postgres_auth_data:
+  postgres_client_data:
+  postgres_etl_data:
+  s3minio_data:
+  s3minio-config:
+  rabbitmq_data:
+
+networks:
+  pricat-network:
+    name: pricat-network
+    driver: bridge

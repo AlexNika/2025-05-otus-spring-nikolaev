@@ -88,3 +88,7 @@ fabric.properties
 
 /.idea/
 /AUTHService/.env
+/.env
+/CLIENTService2/.env_client-service
+/logs/
+/CLIENTService2/logs/
