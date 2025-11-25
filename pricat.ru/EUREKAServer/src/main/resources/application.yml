@@ -1,11 +1,51 @@
 server:
   port: 8761
+  compression:
+    enabled: true
+    min-response-size: 2KB
+  error:
+    whitelabel:
+      enabled: true
+  ssl:
+    enabled: false
+
 spring:
   application:
     name: eureka-server
+  banner:
+    location: classpath:/banner.txt
+    charset: UTF-8
 eureka:
   client:
     register-with-eureka: false
     fetch-registry: false
   server:
     enable-self-preservation: false
+
+management:
+  endpoints:
+    access:
+      default: read_only
+    web:
+      exposure:
+        include: "*"
+      base-path: /actuator
+  endpoint:
+    health:
+      show-details: always
+    logfile:
+      access: read_only
+    info:
+      access: read_only
+  health:
+    defaults:
+      enabled: true
+
+logging:
+  level:
+     ru.pricat: INFO
+     com.netflix.eureka: ERROR
+     org.springframework.cloud.netflix.eureka: ERROR
+  file:
+    name: ./logs/eureka-server.log
+  config: classpath:logback.xml
