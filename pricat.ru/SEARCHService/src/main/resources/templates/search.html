@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta content="IE=edge,chrome=1; charset=UTF-8" http-equiv="X-UA-Compatible">
+    <meta content="width=device-width, initial-scale=1.0" name="viewport">
+    <link rel="stylesheet" th:href="@{/webjars/bootstrap/5.3.8/css/bootstrap.min.css}">
+    <title>Поиск товаров</title>
+    <style>
+        .search-section { max-width: 100%; margin: 2rem auto; padding: 0 1rem; }
+        .results-table { margin-top: 1.5rem; }
+        .loader { display: none; text-align: center; margin: 1.5rem 0; }
+
+        .company-filter {
+            max-width: 40%;
+            margin: 0 auto 1.5rem;
+        }
+
+        .search-form {
+            max-width: 75%;
+            margin: 0 auto 1.5rem;
+        }
+
+        .search-form .form-control {
+            width: 50%;
+            display: inline-block;
+            margin-right: 0.5rem;
+        }
+
+        .search-form .btn {
+            min-width: 90px;
+            padding: 0.375rem 0.5rem;
+            font-size: 0.875rem;
+        }
+
+        .pagination .page-item .page-link {
+            padding: 0.5rem 0.8rem;
+        }
+
+        .price-cell {
+            white-space: nowrap;
+            text-align: left;
+            font-family: monospace;
+        }
+
+        .date-cell {
+            white-space: nowrap;
+        }
+    </style>
+</head>
+<body>
+<div class="container search-section">
+
+    <h2 class="text-center mb-4">Поиск товаров</h2>
+
+    <div class="company-filter">
+        <label for="company" class="form-label">Фильтр по поставщикам</label>
+        <select class="form-select" id="company">
+            <option value="">Все поставщики</option>
+            <option th:each="comp : ${companies}"
+                    th:value="${comp}" th:text="${comp}">
+            </option>
+        </select>
+    </div>
+
+    <form id="searchForm" class="search-form">
+        <div class="input-group">
+            <input type="text" class="form-control" id="query" placeholder="Введите запрос (артикул, название...)" required>
+            <button type="submit" class="btn btn-primary">Поиск</button>
+            <button type="button" id="clearSearch" class="btn btn-outline-secondary">Все результаты</button>
+        </div>
+    </form>
+
+    <div id="loader" class="loader">
+        <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Загрузка...</span>
+        </div>
+    </div>
+
+    <div id="results" class="results-table">
+    </div>
+
+    <nav aria-label="Пагинация">
+        <ul id="pagination" class="pagination justify-content-center"></ul>
+    </nav>
+</div>
+
+<script th:src="@{/webjars/bootstrap/5.3.8/js/bootstrap.bundle.min.js}"></script>
+
+<script>
+    const searchForm = document.getElementById('searchForm');
+    const queryInput = document.getElementById('query');
+    const companySelect = document.getElementById('company');
+    const resultsContainer = document.getElementById('results');
+    const paginationContainer = document.getElementById('pagination');
+    const loader = document.getElementById('loader');
+    const clearSearchBtn = document.getElementById('clearSearch');
+
+    function hideAlertAfter(element, delay = 5000) {
+        setTimeout(() => {
+            element.style.transition = 'opacity 0.3s ease';
+            element.style.opacity = '0';
+            setTimeout(() => element.remove(), 300);
+        }, delay);
+    }
+
+    function escapeHtml(text) {
+        if (text === null || text === undefined) return '–';
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+
+    function formatDate(isoString) {
+        if (!isoString) return '–';
+        const date = new Date(isoString);
+        return date.toLocaleDateString('ru-RU', {
+            day: '2-digit',
+            month: '2-digit',
+            year: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+        });
+    }
+
+    function formatCurrency(currency) {
+        if (!currency) return '₽';
+        switch (currency.trim().toUpperCase()) {
+            case 'RUB': return '₽';
+            case 'USD': return '$';
+            case 'EUR': return '€';
+            default: return currency;
+        }
+    }
+
+    async function performSearch(page = 0, query = null, company = null) {
+        const actualQuery = query !== null ? query : queryInput.value?.trim();
+        const actualCompany = company !== null ? company : companySelect.value;
+
+        loader.style.display = 'block';
+        resultsContainer.innerHTML = '';
+        paginationContainer.innerHTML = '';
+
+        try {
+            const url = new URL('/api/v1/search', window.location.origin);
+            if (actualQuery) url.searchParams.append('query', actualQuery);
+            if (actualCompany) url.searchParams.append('company', actualCompany);
+            url.searchParams.append('page', page);
+            url.searchParams.append('size', 10);
+
+            const response = await fetch(url, {
+                method: 'GET',
+                headers: {
+                    'Authorization': 'Bearer ' + getAccessTokenFromCookie(),
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            if (!response.ok) {
+                if (response.status === 401) {
+                    window.location.href = '/login?error=auth_required';
+                    return;
+                }
+                throw new Error(`HTTP ${response.status}`);
+            }
+
+            const data = await response.json();
+
+            if (data.results.length === 0) {
+                resultsContainer.innerHTML = '<div class="alert alert-warning fade show">Ничего не найдено.</div>';
+                hideAlertAfter(resultsContainer.firstElementChild);
+                loader.style.display = 'none';
+                return;
+            }
+
+            renderResults(data);
+            renderPagination(data, page);
+        } catch (err) {
+            console.error('Search error:', err);
+            resultsContainer.innerHTML = '<div class="alert alert-danger fade show">Ошибка загрузки данных.</div>';
+            hideAlertAfter(resultsContainer.firstElementChild);
+        } finally {
+            loader.style.display = 'none';
+        }
+    }
+
+    function renderResults(data) {
+        const table = `
+            <table class="table table-striped table-hover">
+                <thead>
+                    <tr>
+                        <th>Артикул</th>
+                        <th>Название</th>
+                        <th>Описание</th>
+                        <th>Производитель</th>
+                        <th>Цена</th>
+                        <th>Кол-во</th>
+                        <th>Категория</th>
+                        <th>Актуально на</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${data.results.map(item => `
+                        <tr>
+                            <td>${escapeHtml(item.id)}</td>
+                            <td>${escapeHtml(item.productName)}</td>
+                            <td>${escapeHtml(item.description)}</td>
+                            <td>${escapeHtml(item.manufacturer)}</td>
+                            <td class="price-cell">
+                                ${formatCurrency(item.currency)}
+                                <span style="margin-left: 0.25rem;">${(item.price != null ? item.price.toFixed(1) : '–')}</span>
+                            </td>
+                            <td>${item.stockQuantity != null ? item.stockQuantity : '–'}</td>
+                            <td>${escapeHtml(item.category)}</td>
+                            <td class="date-cell">${formatDate(item.fileProcessedAt)}</td>
+                        </tr>
+                    `).join('')}
+                </tbody>
+            </table>
+        `;
+        resultsContainer.innerHTML = table;
+    }
+
+    function renderPagination(data, currentPage) {
+        if (data.totalPages <= 1) return;
+
+        const items = [];
+
+        if (data.totalPages > 5) {
+            items.push(`
+                <li class="page-item ${currentPage === 0 ? 'disabled' : ''}">
+                    <a class="page-link" href="#" onclick="performSearch(0, null, null); return false;">«</a>
+                </li>
+            `);
+        }
+
+        if (currentPage > 0) {
+            items.push(`
+                <li class="page-item">
+                    <a class="page-link" href="#" onclick="performSearch(${currentPage - 1}, null, null); return false;">←</a>
+                </li>
+            `);
+        }
+
+        const start = Math.max(0, currentPage - 2);
+        const end = Math.min(data.totalPages, currentPage + 3);
+
+        for (let i = start; i < end; i++) {
+            items.push(`
+                <li class="page-item ${i === currentPage ? 'active' : ''}">
+                    <a class="page-link" href="#" onclick="performSearch(${i}, null, null); return false;">${i + 1}</a>
+                </li>
+            `);
+        }
+
+        if (currentPage < data.totalPages - 1) {
+            items.push(`
+                <li class="page-item">
+                    <a class="page-link" href="#" onclick="performSearch(${currentPage + 1}, null, null); return false;">→</a>
+                </li>
+            `);
+        }
+
+        if (data.totalPages > 5) {
+            items.push(`
+                <li class="page-item ${currentPage === data.totalPages - 1 ? 'disabled' : ''}">
+                    <a class="page-link" href="#" onclick="performSearch(${data.totalPages - 1}, null, null); return false;">»</a>
+                </li>
+            `);
+        }
+
+        paginationContainer.innerHTML = items.join('');
+    }
+
+    function getAccessTokenFromCookie() {
+        const name = 'access-token';
+        const value = `; ${document.cookie}`;
+        const parts = value.split(`; ${name}=`);
+        if (parts.length === 2) return parts.pop().split(';').shift();
+    }
+
+    searchForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        performSearch(0);
+    });
+
+    clearSearchBtn.addEventListener('click', () => {
+        queryInput.value = '';
+        performSearch(0, '', companySelect.value);
+    });
+
+    companySelect.addEventListener('change', () => {
+        performSearch(0);
+    });
+
+    document.addEventListener('DOMContentLoaded', () => {
+        queryInput.focus();
+        performSearch(0);
+    });
+</script>
+</body>
+</html>
