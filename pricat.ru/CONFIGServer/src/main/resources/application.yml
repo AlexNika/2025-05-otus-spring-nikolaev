@@ -39,19 +39,25 @@ eureka:
     register-with-eureka: true
     fetch-registry: true
   instance:
-    prefer-ip-address: true
+    prefer-ip-address: false
     instance-id: ${spring.application.name}:${server.port}
+    hostname: localhost
 
 management:
   endpoints:
     web:
       exposure:
-        include: health,info
+        include: "*"
   endpoint:
     health:
       show-details: always
+    info:
+      access: read_only
 
 logging:
   level:
-    org.springframework.cloud.config.server: DEBUG
-    org.flywaydb: DEBUG
+    ru.pricat: INFO
+    org.flywaydb: ERROR
+    com.netflix.discovery.DiscoveryClient: ERROR
+    org.springframework.cloud.netflix.eureka: ERROR
+    root: ERROR

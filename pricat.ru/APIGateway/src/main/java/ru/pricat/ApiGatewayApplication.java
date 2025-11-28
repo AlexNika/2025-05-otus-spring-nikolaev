@@ -4,6 +4,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
+import ru.pricat.config.properties.EnvLoader;
 
 /**
  * Основной класс приложения для микросервиса API-Gateway.
@@ -22,6 +23,7 @@ public class ApiGatewayApplication {
      * @param args аргументы командной строки
      */
     static void main(String[] args) {
+        EnvLoader.loadEnvFile();
         log.info("Starting API Gateway application");
         SpringApplication.run(ApiGatewayApplication.class, args);
         log.info("API Gateway application started successfully");

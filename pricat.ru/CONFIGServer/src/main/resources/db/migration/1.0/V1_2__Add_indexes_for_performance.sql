@@ -1,13 +1,13 @@
 -- Index for fast configuration lookup
-CREATE UNIQUE INDEX idx_config_properties_lookup
+CREATE UNIQUE INDEX IF NOT EXISTS idx_config_properties_lookup
 ON config_properties (application, profile, label, prop_key);
 
 -- Index for application-specific queries
-CREATE INDEX idx_config_properties_application
+CREATE INDEX IF NOT EXISTS idx_config_properties_application
 ON config_properties (application);
 
 -- Index for profile-specific queries
-CREATE INDEX idx_config_properties_profile
+CREATE INDEX IF NOT EXISTS idx_config_properties_profile
 ON config_properties (profile);
 
 -- Function to automatically update updated_at timestamp

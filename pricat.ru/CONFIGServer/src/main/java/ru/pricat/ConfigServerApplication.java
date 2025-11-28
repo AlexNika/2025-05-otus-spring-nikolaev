@@ -13,8 +13,10 @@ import org.springframework.cloud.config.server.EnableConfigServer;
 public class ConfigServerApplication {
 
     static void main(String[] args) {
+        log.info("Starting СonfigServer service application");
         SpringApplication.run(ConfigServerApplication.class, args);
-        log.info("ConfigServer started");
+        log.info("СonfigServer service application started successfully");
+        log.info("СonfigServer URL: http://localhost:8888/actuator");
     }
 
 }

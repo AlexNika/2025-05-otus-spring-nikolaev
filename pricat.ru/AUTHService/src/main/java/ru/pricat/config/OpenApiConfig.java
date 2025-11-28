@@ -8,15 +8,26 @@ import io.swagger.v3.oas.models.security.SecurityScheme;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+/**
+ * Конфигурационный класс для настройки OpenAPI (Swagger) документации.
+ * Определяет информацию о API, а также настраивает схему безопасности
+ * для аутентификации с использованием JWT-токенов через заголовок Authorization.
+ */
 @Configuration
 public class OpenApiConfig {
 
+    /**
+     * Создает и настраивает бин {@link OpenAPI}, содержащий метаданные API
+     * и информацию о схеме безопасности.
+     *
+     * @return настроенный объект OpenAPI
+     */
     @Bean
     public OpenAPI customOpenAPI() {
         return new OpenAPI()
                 .info(new Info()
                         .title("PRICAT.RU - Auth Service API")
-                        .version("1.0")
+                        .version("0.0.1")
                         .description("API documentation for the Authentication Service"))
                 .addSecurityItem(new SecurityRequirement().addList("bearerAuth"))
                 .components(new Components()

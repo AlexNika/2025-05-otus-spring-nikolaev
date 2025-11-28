@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta content="IE=edge,chrome=1; charset=UTF-8" http-equiv="X-UA-Compatible">
+    <meta content="width=device-width, initial-scale=1.0" name="viewport">
+    <link rel="stylesheet" th:href="@{/webjars/bootstrap/5.3.8/css/bootstrap.min.css}">
+    <title>Register</title>
+</head>
+<body>
+<div class="container">
+    <h2>Register</h2>
+
+    <div id="registerError" class="alert alert-danger" style="display: none;"></div>
+
+    <form id="registerForm" th:action="@{/api/v1/auth/register}" method="post">
+        <div class="mb-3">
+            <label for="username" class="form-label">Username</label>
+            <input type="text" class="form-control" id="username" name="username" required>
+        </div>
+        <div class="mb-3">
+            <label for="email" class="form-label">Email</label>
+            <input type="email" class="form-control" id="email" name="email" required>
+        </div>
+        <div class="mb-3">
+            <label for="password" class="form-label">Password</label>
+            <input type="password" class="form-control" id="password" name="password" required>
+        </div>
+        <button type="submit" class="btn btn-primary w-100">Register</button>
+    </form>
+    <a href="/login" class="btn btn-link">Login</a>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const form = document.getElementById('registerForm');
+        if (form) {
+            form.addEventListener('submit', async function (e) {
+                e.preventDefault();
+                const csrfToken = document.querySelector('input[name="_csrf"]').value;
+                const formData = new FormData(form);
+                const data = {
+                    username: formData.get('username'),
+                    email: formData.get('email'),
+                    password: formData.get('password')
+                };
+                try {
+                    const response = await fetch('/api/v1/auth/register', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': csrfToken
+                        },
+                        body: JSON.stringify(data)
+                    });
+                    if (response.ok) {
+                        window.location.href = '/login?registered=true';
+                    } else {
+                        const error = await response.json();
+                        document.getElementById('registerError').innerText = error.message || 'Registration failed';
+                        document.getElementById('registerError').style.display = 'block';
+                    }
+                } catch (err) {
+                    document.getElementById('registerError').innerText = 'Network error';
+                    document.getElementById('registerError').style.display = 'block';
+                }
+            });
+        }
+    });
+</script>
+<script th:if="${false}" th:src="@{/webjars/bootstrap/5.3.8/js/bootstrap.bundle.min.js}"></script>
+</body>
+</html>

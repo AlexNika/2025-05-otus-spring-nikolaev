@@ -17,6 +17,10 @@ public class AppConstants {
     public static final String API_V1_AUTH_PATH = "/api/v1/auth";
 
     /**
+     * Базовый путь для API-эндпоинтов, связанных с сервисом поиска.
+     */
+    public static final String API_V1_SEARCH_PATH = "/api/v1/search";
+    /**
      * Приватный конструктор для предотвращения создания экземпляров класса.
      */
     private AppConstants() {

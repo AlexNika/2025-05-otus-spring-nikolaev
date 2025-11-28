@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta content="IE=edge,chrome=1; charset=UTF-8" http-equiv="X-UA-Compatible">
+    <meta content="width=device-width, initial-scale=1.0" name="viewport">
+    <link rel="stylesheet" th:href="@{/webjars/bootstrap/5.3.8/css/bootstrap.min.css}">
+    <title>Edit Profile</title>
+</head>
+<body th:data-is-admin="${isAdmin}" data-is-admin="false">
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="card-title mb-0">Edit Profile</h4>
+                </div>
+                <div class="card-body">
+                    <div id="profileError" class="alert alert-danger" style="display: none;"></div>
+                    <div id="profileSuccess" class="alert alert-success" style="display: none;"></div>
+
+                    <form id="profileForm" th:action="@{/api/v1/client/me}" method="post">
+                        <div class="mb-3">
+                            <label for="username"  class="form-label"><strong>Username:</strong></label>
+                            <input type="text" class="form-control" id="username" readonly>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="name" class="form-label">Name</label>
+                            <input type="text" class="form-control" id="name" name="name">
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="email" class="form-label">Email</label>
+                            <input type="email" class="form-control" id="email" name="email">
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="companyName" class="form-label">Company name</label>
+                            <input type="text" class="form-control" id="companyName" name="companyName">
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="mobilePhone" class="form-label">Mobile phone</label>
+                            <input type="text" class="form-control" id="mobilePhone" name="mobilePhone">
+                        </div>
+
+                        <div id="adminFields" style="display: none;">
+                            <hr>
+                            <h5>Supplier Settings</h5>
+
+                            <div class="mb-3">
+                                <label for="isSupplier" class="form-label">Is supplier</label>
+                                <select class="form-control" id="isSupplier" name="isSupplier">
+                                    <option value="false">No</option>
+                                    <option value="true">Yes</option>
+                                </select>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="companyFolder" class="form-label">Company folder</label>
+                                <input type="text" class="form-control" id="companyFolder" name="companyFolder">
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="pricelistObtainingWay" class="form-label">Pricelist obtaining way</label>
+                                <select class="form-control" id="pricelistObtainingWay" name="pricelistObtainingWay">
+                                    <option value="MANUAL">Manual</option>
+                                    <option value="EMAIL">Email</option>
+                                    <option value="S3">S3</option>
+                                    <option value="FTP">FTP</option>
+                                    <option value="SFTP">SFTP</option>
+                                    <option value="SELF_API">Self API</option>
+                                    <option value="CLIENT_API">Client API</option>
+                                </select>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="pricelistFormat" class="form-label">Pricelist format</label>
+                                <select class="form-control" id="pricelistFormat" name="pricelistFormat">
+                                    <option value="JSON">JSON</option>
+                                    <option value="XML">XML</option>
+                                    <option value="XLSX">XLSX</option>
+                                    <option value="XLS">XLS</option>
+                                    <option value="CSV">CSV</option>
+                                    <option value="TXT">TXT</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-primary">Save Changes</button>
+                            <a href="/profile" class="btn btn-outline-secondary">Cancel</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script th:inline="javascript">
+    // Global variables
+    let isEditingOtherUser = false;
+    let targetUsername = null;
+
+    document.addEventListener('DOMContentLoaded', function () {
+        initializePage();
+        document.getElementById('profileForm').addEventListener('submit', updateProfile);
+    });
+
+    function initializePage() {
+        // Check if we're editing another user (for admins)
+        const urlParams = new URLSearchParams(window.location.search);
+        targetUsername = urlParams.get('username');
+        isEditingOtherUser = targetUsername !== null;
+
+        if (isEditingOtherUser) {
+            // Update page title for admin editing other user
+            document.querySelector('.card-title').textContent = 'Edit User: ' + targetUsername;
+        }
+
+        loadProfileForEdit();
+    }
+
+    async function loadProfileForEdit() {
+        try {
+            let apiUrl = '/api/v1/client/me';
+            if (isEditingOtherUser) {
+                apiUrl = '/api/v1/client/' + encodeURIComponent(targetUsername);
+            }
+
+            const response = await fetch(apiUrl, {
+                headers: {
+                    'Authorization': 'Bearer ' + getAccessTokenFromCookie()
+                }
+            });
+
+            if (!response.ok) {
+                throw new Error('Not authenticated or user not found');
+            }
+
+            const data = await response.json();
+            populateForm(data);
+
+        } catch (err) {
+            showError('Failed to load profile: ' + err.message);
+            // Redirect to login if not authenticated
+            if (err.message.includes('Not authenticated')) {
+                setTimeout(() => {
+                    window.location.href = '/login?error=true';
+                }, 2000);
+            }
+        }
+    }
+
+    function populateForm(data) {
+        // Fill form fields with profile data
+        document.getElementById('username').value = data.username;
+        document.getElementById('name').value = data.name || '';
+        document.getElementById('email').value = data.email || '';
+        document.getElementById('companyName').value = data.companyName || '';
+        document.getElementById('mobilePhone').value = data.mobilePhone || '';
+
+        document.getElementById('isSupplier').value = data.isSupplier;
+        document.getElementById('companyFolder').value = data.companyFolder || '';
+        document.getElementById('pricelistObtainingWay').value = data.pricelistObtainingWay || 'MANUAL';
+        document.getElementById('pricelistFormat').value = data.pricelistFormat || 'XLSX';
+
+        // const isAdmin = document.getElementById('context').getAttribute('data-is-admin') === 'true';
+        // Check if user has admin role and show admin fields
+        // const roles = data.roles ? data.roles.split(',') : [];
+        // const isAdmin = roles.includes('ADMIN');
+        const isAdmin = [[${isAdmin}]];
+        if (isAdmin) {
+            document.getElementById('adminFields').style.display = 'block';
+        } else {
+            document.getElementById('adminFields').style.display = 'none';
+        }
+    }
+
+    async function updateProfile(event) {
+        event.preventDefault();
+
+        // Collect form data
+        const formData = {};
+        const name = document.getElementById('name').value;
+        const email = document.getElementById('email').value;
+        const companyName = document.getElementById('companyName').value;
+        const mobilePhone = document.getElementById('mobilePhone').value;
+
+        // Only include fields that have values
+        if (name !== '') formData.name = name;
+        if (email !== '') formData.email = email;
+        if (companyName !== '') formData.companyName = companyName;
+        if (mobilePhone !== '') formData.mobilePhone = mobilePhone;
+
+        // Check if current user is admin to include admin fields
+        const isCurrentUserAdmin = await checkCurrentUserIsAdmin();
+        if (isCurrentUserAdmin) {
+            formData.isSupplier = document.getElementById('isSupplier').value === 'true';
+            formData.companyFolder = document.getElementById('companyFolder').value;
+            formData.pricelistObtainingWay = document.getElementById('pricelistObtainingWay').value;
+            formData.pricelistFormat = document.getElementById('pricelistFormat').value;
+        }
+
+        // Validate that at least one field was changed
+        if (Object.keys(formData).length === 0) {
+            showSuccess('No changes to save');
+            return;
+        }
+
+        // Validate email format if provided
+        if (formData.email && !isValidEmail(formData.email)) {
+            showError('Please enter a valid email address');
+            return;
+        }
+
+        await sendUpdateRequest(formData);
+    }
+
+    async function sendUpdateRequest(formData) {
+        try {
+            // Determine API endpoint and method
+            let apiUrl = '/api/v1/client/me';
+            let method = 'PATCH';
+
+            if (isEditingOtherUser) {
+                apiUrl = '/api/v1/client/' + encodeURIComponent(targetUsername);
+                method = 'PUT'; // Use PUT for admin updates
+            }
+
+            const csrfToken = document.querySelector('input[name="_csrf"]').value;
+
+            const response = await fetch(apiUrl, {
+                method: method,
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': 'Bearer ' + getAccessTokenFromCookie(),
+                    'X-CSRF-TOKEN': csrfToken
+                },
+                body: JSON.stringify(formData)
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
+            }
+
+            const updatedProfile = await response.json();
+            showSuccess('Profile updated successfully!');
+
+            // Redirect after successful update
+            setTimeout(() => {
+                if (isEditingOtherUser) {
+                    window.location.href = '/clients?success=User profile updated successfully';
+                } else {
+                    window.location.href = '/profile';
+                }
+            }, 1500);
+
+        } catch (err) {
+            console.error('Update error:', err);
+            showError('Failed to update profile: ' + err.message);
+        }
+    }
+
+    async function checkCurrentUserIsAdmin() {
+        try {
+            const response = await fetch('/api/v1/client/me', {
+                headers: {
+                    'Authorization': 'Bearer ' + getAccessTokenFromCookie()
+                }
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                const roles = data.roles ? data.roles.split(',') : [];
+                return roles.includes('ADMIN');
+            }
+        } catch (err) {
+            console.error('Failed to check user roles:', err);
+        }
+        return false;
+    }
+
+    function showError(message) {
+        const errorDiv = document.getElementById('profileError');
+        errorDiv.innerText = message;
+        errorDiv.style.display = 'block';
+
+        // Hide success message if shown
+        document.getElementById('profileSuccess').style.display = 'none';
+
+        // Auto-hide error after 5 seconds
+        setTimeout(() => {
+            errorDiv.style.display = 'none';
+        }, 5000);
+    }
+
+    function showSuccess(message) {
+        const successDiv = document.getElementById('profileSuccess');
+        successDiv.innerText = message;
+        successDiv.style.display = 'block';
+
+        // Hide error message if shown
+        document.getElementById('profileError').style.display = 'none';
+    }
+
+    function isValidEmail(email) {
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        return emailRegex.test(email);
+    }
+
+    function getAccessTokenFromCookie() {
+        const name = 'access-token';
+        const value = `; ${document.cookie}`;
+        const parts = value.split(`; ${name}=`);
+        if (parts.length === 2) return parts.pop().split(';').shift();
+    }
+
+    // Handle cancel button - different redirect based on context
+    document.querySelector('a[href="/profile"]').addEventListener('click', function(e) {
+        if (isEditingOtherUser) {
+            e.preventDefault();
+            window.location.href = '/clients';
+        }
+        // Otherwise let the default behavior work (redirect to /profile)
+    });
+</script>
+<script th:src="@{/webjars/bootstrap/5.3.8/js/bootstrap.bundle.min.js}"></script>
+</body>
+</html>

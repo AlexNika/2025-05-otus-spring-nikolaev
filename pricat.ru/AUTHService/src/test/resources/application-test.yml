@@ -1,0 +1,33 @@
+# Отключаем Spring Cloud Config и Eureka для профиля "test"
+spring:
+  cloud:
+    config:
+      enabled: false
+      uri: http://localhost:8888 # Не важно, т.к. disabled
+  config:
+    import: "" # Убираем импорт
+  # Отключаем кэш caffeine в тестах, если не нужен
+  cache:
+    type: none
+
+eureka:
+  client:
+    enabled: false
+
+# Настройки логирования для тестов (опционально)
+logging:
+  level:
+    ru.pricat: DEBUG
+    org.springframework.web: DEBUG
+    org.springframework.security: DEBUG
+    org.springframework.r2dbc: DEBUG
+    io.r2dbc: DEBUG
+    org.springframework.test: INFO
+    org.testcontainers: INFO
+    com.github.benmanes.caffeine: WARN
+
+# Настройки безопасности (если нужно отключить в тестах)
+# spring.security.oauth2.resourceserver.jwt.secret-key: test-secret-key-for-tests
+
+# Указываем порт 0 для случайного выбора в тестах, если нужно
+# server.port: 0

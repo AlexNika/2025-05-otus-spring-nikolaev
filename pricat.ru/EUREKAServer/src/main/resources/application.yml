@@ -15,12 +15,17 @@ spring:
   banner:
     location: classpath:/banner.txt
     charset: UTF-8
+
 eureka:
   client:
     register-with-eureka: false
     fetch-registry: false
   server:
     enable-self-preservation: false
+  instance:
+    prefer-ip-address: false
+    instance-id: ${spring.application.name}:${server.port}
+    hostname: localhost
 
 management:
   endpoints:
@@ -28,11 +33,12 @@ management:
       default: read_only
     web:
       exposure:
-        include: "*"
+        include: health, info, metrics, logfile
       base-path: /actuator
   endpoint:
     health:
       show-details: always
+      show-components: always
     logfile:
       access: read_only
     info:

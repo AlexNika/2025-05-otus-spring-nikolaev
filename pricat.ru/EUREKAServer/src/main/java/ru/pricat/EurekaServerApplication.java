@@ -14,6 +14,7 @@ public class EurekaServerApplication {
         log.info("Starting EurekaServer service application");
         SpringApplication.run(EurekaServerApplication.class, args);
         log.info("EurekaServer service application started successfully");
+        log.info("EurekaServer URL: http://localhost:8761");
     }
 
 }

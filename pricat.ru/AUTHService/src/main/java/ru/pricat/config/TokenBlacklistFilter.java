@@ -20,16 +20,40 @@ import ru.pricat.service.TokenBlacklistService;
 
 import java.time.Instant;
 
+/**
+ * Фильтр для проверки JWT-токенов на наличие в черном списке.
+ * Проверяет заголовок Authorization на наличие Bearer-токена,
+ * декодирует его с помощью {@link ReactiveJwtDecoder}, извлекает jti
+ * и сверяет с черным списком, управляемым {@link TokenBlacklistService}.
+ * Если токен заблокирован, возвращает HTTP 401 Unauthorized.
+ */
 @Slf4j
 @Component
 public class TokenBlacklistFilter implements WebFilter {
 
+    /**
+     * Сервис для проверки токенов на наличие в черном списке по их jti.
+     */
     private final TokenBlacklistService tokenBlacklistService;
 
+    /**
+     * Реактивный декодер JWT, используемый для проверки подписи и извлечения данных токена.
+     * Аннотация @Lazy используется для избежания циклической зависимости при инициализации бинов.
+     */
     private final ReactiveJwtDecoder jwtDecoder;
 
+    /**
+     * Jackson ObjectMapper для сериализации объектов в JSON при формировании ответа об ошибке.
+     */
     private final ObjectMapper objectMapper;
 
+    /**
+     * Конструктор для внедрения зависимостей.
+     *
+     * @param tokenBlacklistService сервис для проверки токенов
+     * @param jwtDecoder            реактивный декодер JWT
+     * @param objectMapper          объект для сериализации JSON
+     */
     public TokenBlacklistFilter(TokenBlacklistService tokenBlacklistService,
                                 @Lazy ReactiveJwtDecoder jwtDecoder,
                                 ObjectMapper objectMapper) {
@@ -38,14 +62,21 @@ public class TokenBlacklistFilter implements WebFilter {
         this.objectMapper = objectMapper;
     }
 
+    /**
+     * Выполняет фильтрацию веб-запроса.
+     * Извлекает токен из заголовка Authorization, проверяет его на наличие в черном списке.
+     * Если токен в черном списке, возвращает ошибку 401. Иначе продолжает цепочку фильтров.
+     *
+     * @param exchange объект обмена, содержащий запрос и ответ
+     * @param chain    цепочка фильтров
+     * @return реактивный объект, сигнализирующий о завершении фильтрации
+     */
     @NonNull
     @Override
     public Mono<Void> filter(@NonNull ServerWebExchange exchange, @NonNull WebFilterChain chain) {
         String authHeader = exchange.getRequest().getHeaders().getFirst(HttpHeaders.AUTHORIZATION);
-
         if (authHeader != null && authHeader.startsWith("Bearer ")) {
             String token = authHeader.substring(7);
-
             return jwtDecoder.decode(token)
                     .flatMap(jwt -> {
                         String jti = jwt.getId();
@@ -63,18 +94,20 @@ public class TokenBlacklistFilter implements WebFilter {
 
     /**
      * Приватный метод для формирования JSON-ответа об ошибке и записи его в тело HTTP-ответа.
+     * Устанавливает статус 401 и сериализует объект {@link ErrorResponse} в JSON.
+     *
+     * @param exchange объект обмена, в который записывается ответ
+     * @return реактивный объект, сигнализирующий о завершении записи ответа
      */
     private Mono<Void> writeErrorResponse(@NonNull ServerWebExchange exchange) {
         exchange.getResponse().setStatusCode(HttpStatus.UNAUTHORIZED);
         exchange.getResponse().getHeaders().add(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
-
         ErrorResponse errorResponse = new ErrorResponse(
                 HttpStatus.UNAUTHORIZED.value(),
                 HttpStatus.UNAUTHORIZED.getReasonPhrase(),
                 "Token is blacklisted",
                 Instant.now()
         );
-
         try {
             String body = objectMapper.writeValueAsString(errorResponse);
             DataBuffer buffer = exchange.getResponse().bufferFactory().wrap(body.getBytes());

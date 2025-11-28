@@ -1,13 +1,5 @@
-app:
-  security:
-    access-token-max-age: 3600
-    refresh-token-max-age: 2592000
-
 server:
   port: 8080
-  compression:
-    enabled: true
-    min-response-size: 2KB
 
 spring:
   application:
@@ -18,109 +10,31 @@ spring:
     oauth2:
       resourceserver:
         jwt:
-          secret-key: mySuperSecretKeyThatIsAtLeast32BytesLong!
-  main:
-    web-application-type: reactive
+          secret-key: ${JWT_SECRET_KEY:some-secret-jwt-key}
   cloud:
-    gateway:
-      server:
-        webflux:
-          routes:
-            # API для client-service
-            - id: client-service-web
-              uri: lb://client-service
-              predicates:
-                - Path=/login, /register, /profile, /profile-edit, /clients, /files, /admin, /user/**
-              filters:
-                - AddForwardedHeadersFilter
-            - id: client-service-static
-              uri: lb://client-service
-              filters:
-                - AddForwardedHeadersFilter
-              predicates:
-                - Path=/webjars/**, /js/**, /css/**, /images/**
-            - id: client-service-api
-              uri: lb://client-service
-              predicates:
-                - Path=/api/v1/client/**, api/v1/client/debug-headers/**
-              filters:
-                - AddForwardedHeadersFilter
-            # API для auth-service
-            - id: auth-service-login
-              uri: lb://auth-service
-              predicates:
-                - Path=/api/v1/auth/login
-              filters:
-                - AddXRequestIdFilter
-                - SetRefreshTokenCookieFilter
-                - HandleRefreshTokenFilter
-                - ClearRefreshTokenCookieFilter
-                - SetAccessTokenCookie
-                - RemoveRequestHeader=X-Refresh-Token
-            - id: auth-service-other
-              uri: lb://auth-service
-              predicates:
-                - Path=/api/v1/auth/**
-              filters:
-                - AddXRequestIdFilter
-                - SetRefreshTokenCookieFilter
-                - HandleRefreshTokenFilter
-                - ClearRefreshTokenCookieFilter
-                - RemoveRequestHeader=X-Refresh-Token
-          default-filters: DedupeResponseHeader=Access-Control-Allow-Credentials Access-Control-Allow-Origin
-          discovery:
-            locator:
-              enabled: true
-              lower-case-service-id: true
-  http:
-    codecs:
-      max-in-memory-size: 10MB
-  #  cloud:
-#    config:
-#      fail-fast: true
-#      retry:
-#        initial-interval: 5000
-#        max-attempts: 10
-#        max-interval: 5000
-#        multiplier: 1.2
-#      uri: http://localhost:8888
-#    gateway:
-#      server:
-#        webflux:
-#          httpclient:
-#            ssl:
-#              use-insecure-trust-manager: true
-#  config:
-#    import: "optional:configserver:http://localhost:8888"
-eureka:
-  client:
-    service-url:
-      defaultZone: http://localhost:8761/eureka/
-    register-with-eureka: true
-    fetch-registry: true
+    config:
+      enabled: true
+      uri: http://localhost:8888
+      fail-fast: true
+      retry:
+        initial-interval: 5000
+        max-attempts: 3
+        max-interval: 5000
+        multiplier: 1.2
+  config:
+    import: "optional:configserver:http://localhost:8888"
 
-management:
-  endpoints:
-    web:
-      exposure:
-        include: health, info, gateway, metrics
-      base-path: /actuator
-  endpoint:
-    gateway:
-      access: read_only
-    health:
-      show-details: always
-    info:
-      access: read_only
+app:
+  security:
+    access-token-max-age: 3600
+    refresh-token-max-age: 2592000
+
+eureka:
+  instance:
+    prefer-ip-address: false
+    instance-id: ${spring.application.name}:${server.port}
+    hostname: localhost
 
 logging:
-  level:
-    ru.pricat: DEBUG
-    io.r2dbc: WARN
-    org.flywaydb: WARN
-    org.springframework.web: WARN
-    org.springframework.jdbc: WARN
-    org.springframework.security: INFO
-    org.springframework.cloud.config: WARN
-    org.springframework.r2dbc: WARN
-    com.netflix.discovery.shared.resolver.aws.ConfigClusterResolver: WARN
+  file:
+    name: ./logs/api-gateway.log

@@ -19,6 +19,7 @@ import org.springframework.mock.web.server.MockServerWebExchange;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
 import ru.pricat.config.properties.RefreshTokenConfig;
+import ru.pricat.config.sucurity.HandleRefreshTokenFilter;
 
 import java.time.Duration;
 import java.util.Collections;
