@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+<div th:insert="~{fragments/head :: header('(HW-11) Список комментариев по книге / Каталог книг в библиотеке')}"></div>
+<body>
+<div class="container-fluid w-75 p-3">
+    <h1 class="text-start" id="comments-header">Загрузка названия книги...</h1>
+    <div id="comments-container">
+        <table class="table table-hover table-bordered table-responsive-sm text-center shadow bg-body-tertiary rounded">
+            <thead>
+            <tr class="table-info">
+                <th scope="col">id</th>
+                <th scope="col">Комментарий</th>
+                <th scope="col">Редактировать</th>
+                <th scope="col">Удалить</th>
+            </tr>
+            </thead>
+            <tbody id="comments-table-body">
+            <tr>
+                <td colspan="4" class="text-center">
+                    Загрузка комментариев...
+                </td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="d-grid gap-2 d-md-block">
+        <a class="btn btn-outline-info me-1" th:href="@{/}" type="button">На главную</a>
+        <a class="btn btn-outline-info me-1" th:href="@{/books}" type="button">Книги</a>
+        <a class="btn btn-outline-info me-1" th:href="@{/authors}" type="button">Авторы</a>
+        <a class="btn btn-outline-info me-1" th:href="@{/genres}" type="button">Жанры</a>
+        <a class="ms-3 btn btn-outline-info" id="add-comment-link" type="button">
+            Добавить комментарий
+        </a>
+    </div>
+</div>
+<script th:src="@{/js/form-base.js}"></script>
+<script th:src="@{/js/comments.js}"></script>
+<script th:inline="javascript">
+    commentsManager.init(/*[[${bookId}]]*/);
+</script>
+</body>
+</html>
