@@ -1,10 +1,12 @@
 package ru.otus.hw.repositories;
 
-import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.r2dbc.repository.Query;
+import org.springframework.data.repository.reactive.ReactiveCrudRepository;
+import reactor.core.publisher.Flux;
 import ru.otus.hw.models.Comment;
 
-import java.util.List;
+public interface CommentRepository extends ReactiveCrudRepository<Comment, Long> {
 
-public interface CommentRepository extends JpaRepository<Comment, Long> {
-    List<Comment> findAllByBookId(Long bookId);
+    @Query("SELECT * FROM comments WHERE book_id = :bookId")
+    Flux<Comment> findAllByBookId(Long bookId);
 }

@@ -1,64 +1,49 @@
 package ru.otus.hw.models;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.SequenceGenerator;
-import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.UpdateTimestamp;
-import org.hibernate.proxy.HibernateProxy;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.annotation.Transient;
+import org.springframework.data.relational.core.mapping.Column;
+import org.springframework.data.relational.core.mapping.Table;
 
 import java.time.LocalDateTime;
 import java.util.Objects;
 
-@Entity
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@Table(name = "comments")
+@Table("comments")
 public class Comment {
     @Id
-    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "comment_seq_gen")
-    @SequenceGenerator(name = "comment_seq_gen", sequenceName = "comment_seq", allocationSize = 1)
     private Long id;
 
     @NotBlank(message = "Comment text can't be blank")
-    @Column(nullable = false)
     private String text;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "book_id", nullable = false)
+    @Column("book_id")
+    private Long bookId;
+
+    @Transient
     private Book book;
 
-    @CreationTimestamp
-    @Column(updatable = false, nullable = false)
     private LocalDateTime created;
 
-    @UpdateTimestamp
-    @Column(nullable = false)
     private LocalDateTime updated;
 
-    public Comment(Long id, String text, Book book) {
+    public Comment(Long id, String text, Long bookId) {
         this.id = id;
         this.text = text;
-        this.book = book;
+        this.bookId = bookId;
     }
 
-    public Comment(String text, Book book) {
+    public Comment(String text, Long bookId) {
         this.text = text;
-        this.book = book;
+        this.bookId = bookId;
     }
 
     @Override
@@ -66,24 +51,15 @@ public class Comment {
         if (this == o) {
             return true;
         }
-        if (o == null || this.getClass() != o.getClass()) {
+        if (!(o instanceof Comment comment)) {
             return false;
         }
-        Class<?> oEffectiveClass = o instanceof HibernateProxy proxy ?
-                proxy.getHibernateLazyInitializer().getPersistentClass() : o.getClass();
-        Class<?> thisEffectiveClass = this instanceof HibernateProxy proxy ?
-                proxy.getHibernateLazyInitializer().getPersistentClass() : this.getClass();
-        if (thisEffectiveClass != oEffectiveClass) {
-            return false;
-        }
-        Comment comment = (Comment) o;
         return getId() != null && Objects.equals(getId(), comment.getId());
     }
 
     @Override
     public final int hashCode() {
-        return this instanceof HibernateProxy proxy ?
-                proxy.getHibernateLazyInitializer().getPersistentClass().hashCode() : getClass().hashCode();
+        return Comment.class.hashCode();
     }
 
     @Override

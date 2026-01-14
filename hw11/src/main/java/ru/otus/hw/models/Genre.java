@@ -1,44 +1,29 @@
 package ru.otus.hw.models;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.SequenceGenerator;
-import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.UpdateTimestamp;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.relational.core.mapping.Table;
 
 import java.time.LocalDateTime;
 
-@Entity
 @Getter
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
-@Table(name = "genres")
+@Table("genres")
 public class Genre {
     @Id
-    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "genre_seq_gen")
-    @SequenceGenerator(name = "genre_seq_gen", sequenceName = "genre_seq", allocationSize = 1)
     private Long id;
 
     @NotBlank(message = "Genre name can't be blank")
-    @Column(nullable = false, unique = true)
     private String name;
 
-    @CreationTimestamp
-    @Column(updatable = false, nullable = false)
     private LocalDateTime created;
 
-    @UpdateTimestamp
-    @Column(nullable = false)
     private LocalDateTime updated;
 
     public Genre(Long id, String name) {

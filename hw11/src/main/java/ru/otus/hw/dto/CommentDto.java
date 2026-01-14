@@ -17,4 +17,8 @@ public record CommentDto(Long id,
                          String text,
                          @JsonIgnore
                          Book book) {
+
+    public String getBookTitle() {
+        return book != null ? book.getTitle() : "Неизвестная книга";
+    }
 }

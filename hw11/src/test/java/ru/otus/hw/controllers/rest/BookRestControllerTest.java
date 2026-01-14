@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.reactive.WebFluxTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.reactive.server.WebTestClient;
 import reactor.core.publisher.Flux;
@@ -35,6 +36,7 @@ import static org.mockito.Mockito.when;
 @DisplayName("REST контроллер для работы с книгами ")
 @WebFluxTest(controllers = {BookRestController.class, AuthorRestController.class, GenreRestController.class})
 @Import(RestExceptionHandler.class)
+@ActiveProfiles("test")
 class BookRestControllerTest {
 
     private static final Long MISSING_ID = 42L;

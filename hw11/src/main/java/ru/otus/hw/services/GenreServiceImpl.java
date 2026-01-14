@@ -2,18 +2,18 @@ package ru.otus.hw.services;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.validation.annotation.Validated;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-import reactor.core.scheduler.Schedulers;
 import ru.otus.hw.dto.GenreDto;
 import ru.otus.hw.dto.mapper.GenreMapper;
 import ru.otus.hw.exceptions.EntityNotFoundException;
 import ru.otus.hw.models.Genre;
 import ru.otus.hw.repositories.GenreRepository;
 
+import java.time.LocalDateTime;
 import java.util.Set;
 
 import static org.springframework.util.CollectionUtils.isEmpty;
@@ -21,6 +21,7 @@ import static ru.otus.hw.utils.ValidationMessages.ENTITY_NOT_FOUND_MESSAGE;
 import static ru.otus.hw.utils.ValidationMessages.ILLEGAL_ARGUMENT_MESSAGE;
 
 @Service
+@Validated
 @RequiredArgsConstructor
 public class GenreServiceImpl implements GenreService {
 
@@ -30,9 +31,7 @@ public class GenreServiceImpl implements GenreService {
 
     @Override
     public Flux<GenreDto> findAll() {
-        return Mono.fromCallable(genreRepository::findAll)
-                .subscribeOn(Schedulers.boundedElastic())
-                .flatMapMany(Flux::fromIterable)
+        return genreRepository.findAll()
                 .map(mapper::toGenreDto);
     }
 
@@ -44,69 +43,58 @@ public class GenreServiceImpl implements GenreService {
             ));
         }
 
-        return Mono.fromCallable(() -> genreRepository.findAllById(ids))
-                .subscribeOn(Schedulers.boundedElastic())
-                .flatMapMany(Flux::fromIterable)
+        return genreRepository.findAllById(ids)
                 .map(mapper::toGenreDto)
-                .switchIfEmpty(Flux.error(new IllegalArgumentException(
+                .switchIfEmpty(Mono.error(new IllegalArgumentException(
                         "No genres found for the provided IDs"
                 )));
     }
 
     @Override
     public Mono<GenreDto> findById(Long id) {
-        return Mono.fromCallable(() -> genreRepository.findById(id))
-                .subscribeOn(Schedulers.boundedElastic())
-                .flatMap(optionalGenre -> optionalGenre
-                        .map(genre -> Mono.just(mapper.toGenreDto(genre)))
-                        .orElseGet(() -> Mono.error(new EntityNotFoundException(
-                                ENTITY_NOT_FOUND_MESSAGE.getMessage(Genre.class.getSimpleName(), id)
-                        ))));
+        return genreRepository.findById(id)
+                .switchIfEmpty(Mono.error(new EntityNotFoundException(
+                        ENTITY_NOT_FOUND_MESSAGE.getMessage(Genre.class.getSimpleName(), id)
+                )))
+                .map(mapper::toGenreDto);
     }
 
     @Override
     @Transactional
     public Mono<GenreDto> insert(@Valid String name) {
-        return Mono.fromCallable(() -> genreRepository.save(new Genre(name)))
-                .subscribeOn(Schedulers.boundedElastic())
+        Genre genre = new Genre(name);
+        genre.setCreated(LocalDateTime.now());
+        genre.setUpdated(LocalDateTime.now());
+        return genreRepository.save(genre)
                 .map(mapper::toGenreDto);
     }
 
     @Override
     @Transactional
     public Mono<GenreDto> update(Long id, @Valid String name) {
-        return Mono.fromCallable(() -> genreRepository.findById(id))
-                .subscribeOn(Schedulers.boundedElastic())
-                .flatMap(optionalGenre -> optionalGenre
-                        .map(genre -> {
-                            genre.setName(name);
-                            return genre;
-                        })
-                        .map(Mono::just)
-                        .orElseGet(() -> Mono.error(new EntityNotFoundException(
-                                ENTITY_NOT_FOUND_MESSAGE.getMessage(Genre.class.getSimpleName(), id)
-                        )))
-                )
-                .flatMap(updatedGenre ->
-                        Mono.fromCallable(() -> genreRepository.save(updatedGenre))
-                                .subscribeOn(Schedulers.boundedElastic())
-                )
+        return genreRepository.findById(id)
+                .switchIfEmpty(Mono.error(new EntityNotFoundException(
+                        ENTITY_NOT_FOUND_MESSAGE.getMessage(Genre.class.getSimpleName(), id)
+                )))
+                .flatMap(genre -> {
+                    genre.setName(name);
+                    genre.setUpdated(LocalDateTime.now());
+                    return genreRepository.save(genre);
+                })
                 .map(mapper::toGenreDto);
     }
 
     @Override
     @Transactional
     public Mono<Void> deleteById(Long id) {
-        return Mono.fromRunnable(() -> {
-                    try {
-                        genreRepository.deleteById(id);
-                    } catch (EmptyResultDataAccessException ex) {
-                        throw new EntityNotFoundException(
+        return genreRepository.existsById(id)
+                .flatMap(exists -> {
+                    if (!exists) {
+                        return Mono.error(new EntityNotFoundException(
                                 ENTITY_NOT_FOUND_MESSAGE.getMessage(Genre.class.getSimpleName(), id)
-                        );
+                        ));
                     }
-                })
-                .subscribeOn(Schedulers.boundedElastic())
-                .then();
+                    return genreRepository.deleteById(id);
+                });
     }
 }

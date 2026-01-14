@@ -6,7 +6,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-import reactor.core.scheduler.Schedulers;
 import ru.otus.hw.dto.CommentDto;
 import ru.otus.hw.dto.mapper.CommentMapper;
 import ru.otus.hw.exceptions.EntityNotFoundException;
@@ -15,6 +14,7 @@ import ru.otus.hw.models.Comment;
 import ru.otus.hw.repositories.BookRepository;
 import ru.otus.hw.repositories.CommentRepository;
 
+import java.time.LocalDateTime;
 import java.util.Set;
 
 import static org.springframework.util.CollectionUtils.isEmpty;
@@ -33,13 +33,17 @@ public class CommentServiceImpl implements CommentService {
 
     @Override
     public Mono<CommentDto> findById(Long id) {
-        return Mono.fromCallable(() -> commentRepository.findById(id))
-                .subscribeOn(Schedulers.boundedElastic())
-                .flatMap(optionalComment -> optionalComment
-                        .map(comment -> Mono.just(mapper.toCommentDto(comment)))
-                        .orElseGet(() -> Mono.error(new EntityNotFoundException(
-                                ENTITY_NOT_FOUND_MESSAGE.getMessage(Comment.class.getSimpleName(), id)
-                        ))));
+        return commentRepository.findById(id)
+                .switchIfEmpty(Mono.error(new EntityNotFoundException(
+                        ENTITY_NOT_FOUND_MESSAGE.getMessage(Comment.class.getSimpleName(), id)
+                )))
+                .flatMap(comment -> bookRepository.findById(comment.getBookId())
+                        .map(book -> {
+                            comment.setBook(book);
+                            return comment;
+                        })
+                )
+                .map(mapper::toCommentDto);
     }
 
     @Override
@@ -50,9 +54,7 @@ public class CommentServiceImpl implements CommentService {
             ));
         }
 
-        return Mono.fromCallable(() -> commentRepository.findAllById(ids))
-                .subscribeOn(Schedulers.boundedElastic())
-                .flatMapMany(Flux::fromIterable)
+        return commentRepository.findAllById(ids)
                 .map(mapper::toCommentDto)
                 .switchIfEmpty(Flux.error(new IllegalArgumentException(
                         "No comments found for the provided IDs"
@@ -62,70 +64,65 @@ public class CommentServiceImpl implements CommentService {
     @Override
     @Transactional(readOnly = true)
     public Flux<CommentDto> findByBookId(Long bookId) {
-        return Mono.fromCallable(() -> bookRepository.findById(bookId))
-                .subscribeOn(Schedulers.boundedElastic())
-                .flatMap(optionalBook -> optionalBook
-                        .map(Mono::just)
-                        .orElseGet(() -> Mono.error(new EntityNotFoundException(
-                                ENTITY_NOT_FOUND_MESSAGE.getMessage(Book.class.getSimpleName(), bookId)
-                        ))))
-                .thenMany(
-                        Mono.fromCallable(() -> commentRepository.findAllByBookId(bookId))
-                                .subscribeOn(Schedulers.boundedElastic())
-                                .flatMapMany(Flux::fromIterable)
-                                .map(mapper::toCommentDto)
-                );
-    }
-
-    @Override
-    @Transactional
-    public Mono<CommentDto> insert(@Valid String text, Long bookId) {
-        return Mono.fromCallable(() -> bookRepository.findById(bookId))
-                .subscribeOn(Schedulers.boundedElastic())
-                .flatMap(optionalBook -> optionalBook
-                        .map(Mono::just)
-                        .orElseGet(() -> Mono.error(new EntityNotFoundException(
-                                ENTITY_NOT_FOUND_MESSAGE.getMessage(Book.class.getSimpleName(), bookId)
-                        ))))
-                .flatMap(book ->
-                        Mono.fromCallable(() -> commentRepository.save(new Comment(text, book)))
-                                .subscribeOn(Schedulers.boundedElastic())
-                                .map(mapper::toCommentDto)
-                );
-    }
-
-    @Override
-    @Transactional
-    public Mono<CommentDto> update(Long id, @Valid String text) {
-        return Mono.fromCallable(() -> commentRepository.findById(id))
-                .subscribeOn(Schedulers.boundedElastic())
-                .flatMap(optionalComment -> optionalComment
+        return bookRepository.findById(bookId)
+                .switchIfEmpty(Mono.error(new EntityNotFoundException(
+                        ENTITY_NOT_FOUND_MESSAGE.getMessage(Book.class.getSimpleName(), bookId)
+                )))
+                .flatMapMany(book -> commentRepository.findAllByBookId(bookId)
                         .map(comment -> {
-                            comment.setText(text);
+                            comment.setBook(book);
                             return comment;
                         })
-                        .map(Mono::just)
-                        .orElseGet(() -> Mono.error(new EntityNotFoundException(
-                                ENTITY_NOT_FOUND_MESSAGE.getMessage(Comment.class.getSimpleName(), id)
-                        ))))
-                .flatMap(updatedComment ->
-                        Mono.fromCallable(() -> commentRepository.save(updatedComment))
-                                .subscribeOn(Schedulers.boundedElastic())
                 )
                 .map(mapper::toCommentDto);
     }
 
     @Override
     @Transactional
-    public Mono<Void> deleteById(Long id) {
-        return Mono.fromRunnable(() -> {
-                    if (!commentRepository.existsById(id)) {
-                        throw new EntityNotFoundException(ENTITY_NOT_FOUND_MESSAGE
-                                .getMessage(Book.class.getSimpleName(), id));
+    public Mono<CommentDto> insert(@Valid String text, Long bookId) {
+        return bookRepository.existsById(bookId)
+                .flatMap(exists -> {
+                    if (!exists) {
+                        return Mono.error(new EntityNotFoundException(
+                                ENTITY_NOT_FOUND_MESSAGE.getMessage(Book.class.getSimpleName(), bookId)
+                        ));
                     }
-                    commentRepository.deleteById(id);
+                    Comment comment = new Comment();
+                    comment.setText(text);
+                    comment.setBookId(bookId);
+                    comment.setCreated(LocalDateTime.now());
+                    comment.setUpdated(LocalDateTime.now());
+                    return commentRepository.save(comment);
                 })
-                .subscribeOn(Schedulers.boundedElastic())
-                .then();
+                .map(mapper::toCommentDto);
+    }
+
+    @Override
+    @Transactional
+    public Mono<CommentDto> update(Long id, @Valid String text) {
+        return commentRepository.findById(id)
+                .switchIfEmpty(Mono.error(new EntityNotFoundException(
+                        ENTITY_NOT_FOUND_MESSAGE.getMessage(Comment.class.getSimpleName(), id)
+                )))
+                .flatMap(comment -> {
+                    comment.setText(text);
+                    comment.setUpdated(LocalDateTime.now());
+                    return commentRepository.save(comment);
+                })
+                .map(mapper::toCommentDto);
+    }
+
+    @Override
+    @Transactional
+    public Mono<Void> deleteById(Long id) {
+        return commentRepository.existsById(id)
+                .flatMap(exists -> {
+                    if (!exists) {
+                        return Mono.error(new EntityNotFoundException(
+                                ENTITY_NOT_FOUND_MESSAGE.getMessage(Comment.class.getSimpleName(), id)
+                        ));
+                    }
+                    return commentRepository.deleteById(id);
+                });
     }
 }

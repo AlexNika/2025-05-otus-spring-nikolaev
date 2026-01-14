@@ -1,107 +1,72 @@
 package ru.otus.hw.models;
 
-import jakarta.persistence.CascadeType;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.JoinTable;
-import jakarta.persistence.ManyToMany;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.NamedAttributeNode;
-import jakarta.persistence.NamedEntityGraph;
-import jakarta.persistence.OneToMany;
-import jakarta.persistence.SequenceGenerator;
-import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.Fetch;
-import org.hibernate.annotations.FetchMode;
-import org.hibernate.annotations.UpdateTimestamp;
-import org.hibernate.proxy.HibernateProxy;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.annotation.Transient;
+import org.springframework.data.relational.core.mapping.Column;
+import org.springframework.data.relational.core.mapping.Table;
 
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 
-@Entity
 @Getter
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
-@Table(name = "books")
-@NamedEntityGraph(name = "book-author-genres",
-        attributeNodes = {@NamedAttributeNode("author"),
-                @NamedAttributeNode("genres")})
+@Table("books")
 public class Book {
     @Id
-    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "book_seq_gen")
-    @SequenceGenerator(name = "book_seq_gen", sequenceName = "book_seq", allocationSize = 1)
     private Long id;
 
     @NotBlank(message = "Book title can't be blank")
-    @Column(name = "title", nullable = false)
     private String title;
 
-    @ManyToOne(fetch = FetchType.LAZY, cascade = {CascadeType.MERGE})
-    @JoinColumn(name = "author_id", nullable = false)
+    @Column("author_id")
+    private Long authorId;
+
+    @Transient
     private Author author;
 
-    @ManyToMany(fetch = FetchType.LAZY,
-            cascade = {
-                    CascadeType.MERGE
-            }
-    )
-    @JoinTable(name = "books_genres",
-            joinColumns = @JoinColumn(name = "book_id"),
-            inverseJoinColumns = @JoinColumn(name = "genre_id"))
-    @Fetch(FetchMode.SUBSELECT)
+    @Transient
     private Set<Genre> genres;
 
-    @OneToMany(mappedBy = "book", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
-    @Fetch(FetchMode.SUBSELECT)
+    @Transient
     private List<Comment> comments;
 
-    @CreationTimestamp
-    @Column(updatable = false, nullable = false)
     private LocalDateTime created;
 
-    @UpdateTimestamp
-    @Column(nullable = false)
     private LocalDateTime updated;
 
-    public Book(String title, Author author, Set<Genre> genres) {
+    public Book(String title, Long authorId, Set<Genre> genres) {
         this.title = title;
-        this.author = author;
+        this.authorId = authorId;
         this.genres = genres;
     }
 
-    public Book(Long id, String title, Author author, Set<Genre> genres) {
+    public Book(Long id, String title, Long authorId, Set<Genre> genres) {
         this.id = id;
         this.title = title;
-        this.author = author;
+        this.authorId = authorId;
         this.genres = genres;
     }
 
-    public Book(String title, Author author, Set<Genre> genres, List<Comment> comments) {
+    public Book(String title, Long authorId, Set<Genre> genres, List<Comment> comments) {
         this.title = title;
-        this.author = author;
+        this.authorId = authorId;
         this.genres = genres;
         this.comments = comments;
     }
 
-    public Book(Long id, String title, Author author, Set<Genre> genres, List<Comment> comments) {
+    public Book(Long id, String title, Long authorId, Set<Genre> genres, List<Comment> comments) {
         this.id = id;
         this.title = title;
-        this.author = author;
+        this.authorId = authorId;
         this.genres = genres;
         this.comments = comments;
     }
@@ -111,24 +76,15 @@ public class Book {
         if (this == o) {
             return true;
         }
-        if (o == null || this.getClass() != o.getClass()) {
+        if (!(o instanceof Book book)) {
             return false;
         }
-        Class<?> oEffectiveClass = o instanceof HibernateProxy proxy
-                ? proxy.getHibernateLazyInitializer().getPersistentClass() : o.getClass();
-        Class<?> thisEffectiveClass = this instanceof HibernateProxy proxy
-                ? proxy.getHibernateLazyInitializer().getPersistentClass() : this.getClass();
-        if (thisEffectiveClass != oEffectiveClass) {
-            return false;
-        }
-        Book book = (Book) o;
         return getId() != null && Objects.equals(getId(), book.getId());
     }
 
     @Override
     public final int hashCode() {
-        return this instanceof HibernateProxy proxy ?
-                proxy.getHibernateLazyInitializer().getPersistentClass().hashCode() : getClass().hashCode();
+        return Book.class.hashCode();
     }
 
     @Override
