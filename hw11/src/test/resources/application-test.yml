@@ -1,0 +1,31 @@
+spring:
+  r2dbc:
+    url: r2dbc:h2:mem:///hw11-test;DB_CLOSE_DELAY=10000;DB_CLOSE_ON_EXIT=FALSE
+    username: sa
+    password:
+    pool:
+      initial-size: 1
+      max-size: 5
+
+  datasource:
+    url: jdbc:h2:mem:hw11-test;DB_CLOSE_DELAY=10000;DB_CLOSE_ON_EXIT=FALSE
+    username: sa
+    password:
+  
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
+    baseline-version: 0
+    url: jdbc:h2:mem:hw11-test;DB_CLOSE_DELAY=10000;DB_CLOSE_ON_EXIT=FALSE
+    user: sa
+    password:
+  sql:
+    init:
+      mode: never
+server:
+  error:
+    whitelabel:
+      enabled: false
+logging:
+  level:
+    root: error
