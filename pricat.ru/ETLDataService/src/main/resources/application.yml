@@ -1,0 +1,133 @@
+app:
+  s3:
+    endpoint: ${S3_ENDPOINT:-http://localhost:9000}
+    access-key: ${S3_ACCESS_KEY:-YZwDQoNhrphnsPd0Wlve}
+    secret-key: ${S3_SECRET_KEY:-PzmpRdDOqQf6hDMPldX878Ec3DYidwmqLpdARgh2}
+    bucket-name: ${S3_BUCKET_NAME:-price-files}
+    region: ${S3_REGION:-ru-moscow-1}
+  rabbitmq:
+    exchange-name: etl-e
+    queue-name: etl-q
+    queue-type: quorum
+    delivery-limit: 3
+    message-ttl: 43200000
+    routing-key: data.item.*
+    dl-exchange-name: etl-dle
+    dl-queue-name: etl-dlq
+    dl-queue-type: classic
+    dl-message-ttl: 86400000
+    dl-routing-key: dl.data.item.*
+    s3-event-exchange-name: s3minio.direct
+    s3-event-queue-name: s3minio.event.queue
+    s3-event-queue-type: classic
+    s3-event-routing-key: s3minio.pricat.events
+    s3-event-consumer-enabled: true
+    retry-max-attempts: 3
+    retry-initial-interval: 2000
+    retry-multiplier: 2
+    retry-max-interval: 10000
+    batch-size: 20
+
+server:
+  port: 8085
+  compression:
+    enabled: true
+    min-response-size: 2KB
+  error:
+    whitelabel:
+      enabled: true
+  ssl:
+    enabled: false
+
+spring:
+  application:
+    name: etldata-service
+  banner:
+    location: classpath:/banner.txt
+    charset: UTF-8
+  main:
+    allow-circular-references: true
+  data:
+    rest:
+      base-path: /rest
+  datasource:
+    url: jdbc:postgresql://localhost:5435/${ETLDATASERVICE_PG_DATABASE:-etldata_db}
+    username: ${ETLDATASERVICE_PG_USERNAME:-etldata_user}
+    password: ${ETLDATASERVICE_PG_PASSWORD:-etldata_pass}
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    generate-ddl: false
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        format_sql: true
+    show-sql: false
+    open-in-view: true
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
+    create-schemas: true
+    default-schema: etldataprocessor
+    locations: classpath:db/migration
+  cloud:
+    config:
+      enabled: false
+      uri: http://localhost:8888
+      fail-fast: true
+      retry:
+        initial-interval: 5000
+        max-attempts: 3
+        max-interval: 5000
+        multiplier: 1.2
+  config:
+    import: optional:configserver:http://localhost:8888
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
+    register-with-eureka: true
+    fetch-registry: true
+  instance:
+    prefer-ip-address: false
+    instance-id: ${spring.application.name}:${server.port}
+    hostname: localhost
+
+management:
+  endpoints:
+    access:
+      default: read_only
+    web:
+      exposure:
+        include: health, info, metrics, rabbit, logfile
+      base-path: /actuator
+  endpoint:
+    health:
+      show-details: always
+      show-components: always
+    logfile:
+      access: read_only
+    info:
+      access: read_only
+  health:
+    defaults:
+      enabled: true
+    rabbit:
+      enabled: true
+
+logging:
+  level:
+    ru.pricat: DEBUG
+    org.springframework.amqp: INFO
+    org.springframework.integration: INFO
+    software.amazon.awssdk: INFO
+    org.springframework.cloud.config: INFO
+    org.springframework.web.client.RestTemplate: INFO
+    com.netflix.discovery.shared.resolver.aws.ConfigClusterResolver: WARN
+  file:
+    name: logs/etldata-service.log
+  config: classpath:logback.xml
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"

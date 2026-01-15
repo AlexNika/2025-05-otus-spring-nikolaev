@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta content="IE=edge,chrome=1; charset=UTF-8" http-equiv="X-UA-Compatible">
+    <meta content="width=device-width, initial-scale=1.0" name="viewport">
+    <link rel="stylesheet" th:href="@{/webjars/bootstrap/5.3.8/css/bootstrap.min.css}">
+    <title>Profile</title>
+</head>
+<body>
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h4 class="card-title mb-0">User Profile</h4>
+                    <div class="btn-group">
+                        <a href="/profile-edit" class="btn btn-primary btn-sm">Edit Profile</a>
+                        <button id="logoutBtn" class="btn btn-outline-danger btn-sm">Logout</button>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div id="profileError" class="alert alert-danger" style="display: none;"></div>
+
+                    <div class="row mb-3">
+                        <div class="col-sm-4 fw-bold">Username:</div>
+                        <div class="col-sm-8" id="username">Loading...</div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-sm-4 fw-bold">Email:</div>
+                        <div class="col-sm-8" id="email">Loading...</div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-sm-4 fw-bold">Name:</div>
+                        <div class="col-sm-8" id="name">Loading...</div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-sm-4 fw-bold">Roles:</div>
+                        <div class="col-sm-8" id="roles">Loading...</div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-sm-4 fw-bold">Company name:</div>
+                        <div class="col-sm-8" id="company-name">Loading...</div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-sm-4 fw-bold">Mobile phone:</div>
+                        <div class="col-sm-8" id="mobile-phone">Loading...</div>
+                    </div>
+
+                    <div class="row mb-3" id="is-supplier-container" style="display: none;">
+                        <div class="col-sm-4 fw-bold">Is supplier:</div>
+                        <div class="col-sm-8" id="is-supplier">Loading...</div>
+                    </div>
+
+                    <div class="row mb-3" id="company-folder-container" style="display: none;">
+                        <div class="col-sm-4 fw-bold">Company folder:</div>
+                        <div class="col-sm-8" id="company-folder">Loading...</div>
+                    </div>
+
+                    <div class="row mb-3" id="pricelist-obtaining-way-container" style="display: none;">
+                        <div class="col-sm-4 fw-bold">Pricelist obtaining way:</div>
+                        <div class="col-sm-8" id="pricelist-obtaining-way">Loading...</div>
+                    </div>
+
+                    <div class="row mb-3" id="pricelist-format-container" style="display: none;">
+                        <div class="col-sm-4 fw-bold">Pricelist format:</div>
+                        <div class="col-sm-8" id="pricelist-format">Loading...</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        loadProfile();
+        document.getElementById('logoutBtn').addEventListener('click', logout);
+    });
+
+    // async function loadProfile() {
+    //     try {
+    //         const response = await fetch('/api/v1/client/me', {
+    //             headers: {
+    //                 'Authorization': 'Bearer ' + getAccessTokenFromCookie()
+    //             }
+    //         });
+    //
+    //         if (!response.ok) {
+    //             document.getElementById('profileError').innerText = 'Failed to load profile: Not authenticated';
+    //             document.getElementById('profileError').style.display = 'block';
+    //             window.location.href = '/login?error=true';
+    //             return;
+    //         }
+    //
+    //         const data = await response.json();
+    //         document.getElementById('username').innerText = data.username;
+    //         document.getElementById('email').innerText = data.email;
+    //         document.getElementById('roles').innerText = data.roles;
+    //         document.getElementById('name').innerText = data.name;
+    //         document.getElementById('company-name').innerText = data.companyName;
+    //         document.getElementById('mobile-phone').innerText = data.mobilePhone;
+    //
+    //         if (data.isSupplier === true) {
+    //             document.getElementById('is-supplier-container').style.display = 'flex';
+    //             document.getElementById('company-folder-container').style.display = 'flex';
+    //             document.getElementById('pricelist-obtaining-way-container').style.display = 'flex';
+    //             document.getElementById('pricelist-format-container').style.display = 'flex';
+    //
+    //             document.getElementById('is-supplier').innerText = data.isSupplier;
+    //             document.getElementById('company-folder').innerText = data.companyFolder;
+    //             document.getElementById('pricelist-obtaining-way').innerText = data.pricelistObtainingWay;
+    //             document.getElementById('pricelist-format').innerText = data.pricelistFormat;
+    //         }
+    //
+    //     } catch (err) {
+    //         document.getElementById('profileError').innerText = 'Failed to load profile: ' + err.message;
+    //         document.getElementById('profileError').style.display = 'block';
+    //         window.location.href = '/login?error=true';
+    //     }
+    // }
+    async function loadProfile() {
+        try {
+            const response = await fetch('/api/v1/client/me', {
+                headers: {
+                    'Authorization': 'Bearer ' + getAccessTokenFromCookie()
+                }
+            });
+
+            if (!response.ok) {
+                showError('Not authenticated');
+                return;
+            }
+
+            const data = await response.json();
+            document.getElementById('username').innerText = data.username;
+            document.getElementById('email').innerText = data.email;
+            document.getElementById('roles').innerText = data.roles;
+            document.getElementById('name').innerText = data.name;
+            document.getElementById('company-name').innerText = data.companyName;
+            document.getElementById('mobile-phone').innerText = data.mobilePhone;
+
+            // Показываем поля ТОЛЬКО если пользователь — ADMIN
+            const isAdmin = data.roles.includes('ADMIN');
+
+            if (isAdmin) {
+                // Показываем контейнеры
+                document.getElementById('is-supplier-container').style.display = 'flex';
+                document.getElementById('company-folder-container').style.display = 'flex';
+                document.getElementById('pricelist-obtaining-way-container').style.display = 'flex';
+                document.getElementById('pricelist-format-container').style.display = 'flex';
+
+                // Заполняем значения
+                document.getElementById('is-supplier').innerText = data.isSupplier;
+                document.getElementById('company-folder').innerText = data.companyFolder || '—';
+                document.getElementById('pricelist-obtaining-way').innerText = data.pricelistObtainingWay;
+                document.getElementById('pricelist-format').innerText = data.pricelistFormat;
+            } else {
+                // Скрываем все админские поля для не-админов
+                const adminContainers = [
+                    'is-supplier-container',
+                    'company-folder-container',
+                    'pricelist-obtaining-way-container',
+                    'pricelist-format-container'
+                ];
+                adminContainers.forEach(id => {
+                    const el = document.getElementById(id);
+                    if (el) el.style.display = 'none';
+                });
+            }
+
+        } catch (err) {
+            showError('Failed to load profile: ' + err.message);
+        }
+    }
+
+    function showError(message) {
+        const errorDiv = document.getElementById('profileError');
+        errorDiv.innerText = message;
+        errorDiv.style.display = 'block';
+        setTimeout(() => window.location.href = '/login?error=true', 5000);
+    }
+
+    function logout() {
+        fetch('/api/v1/auth/logout', {
+            method: 'POST',
+            headers: {
+                'Authorization': 'Bearer ' + getAccessTokenFromCookie()
+            }
+        })
+            .then(() => {
+                document.cookie = "access-token=; Max-Age=0; Path=/";
+                window.location.href = '/login?loggedOut=true';
+            })
+            .catch(() => {
+                window.location.href = '/login?loggedOut=true';
+            });
+    }
+
+    function getAccessTokenFromCookie() {
+        const name = 'access-token';
+        const value = `; ${document.cookie}`;
+        const parts = value.split(`; ${name}=`);
+        if (parts.length === 2) return parts.pop().split(';').shift();
+    }
+</script>
+<script th:src="@{/webjars/bootstrap/5.3.8/js/bootstrap.bundle.min.js}"></script>
+</body>
+</html>

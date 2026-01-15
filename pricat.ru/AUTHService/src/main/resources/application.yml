@@ -1,0 +1,55 @@
+server:
+  port: 8081
+
+spring:
+  application:
+    name: auth-service
+  banner:
+    location: classpath:/banner.txt
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          secret-key: ${JWT_SECRET_KEY:some-secret-jwt-key}
+  cloud:
+    config:
+      enabled: true
+      uri: http://localhost:8888
+      fail-fast: true
+      retry:
+        initial-interval: 5000
+        max-attempts: 3
+        max-interval: 5000
+        multiplier: 1.2
+  config:
+    import: "optional:configserver:http://localhost:8888"
+  r2dbc:
+    url: r2dbc:postgresql://localhost:5433/${AUTHSERVICE_PG_DATABASE:auth_db}
+    username: ${AUTHSERVICE_PG_USERNAME:auth_user}
+    password: ${AUTHSERVICE_PG_PASSWORD:auth_pass}
+  datasource:
+    url: jdbc:postgresql://localhost:5433/${AUTHSERVICE_PG_DATABASE:auth_db}
+    username: ${AUTHSERVICE_PG_USERNAME:auth_user}
+    password: ${AUTHSERVICE_PG_PASSWORD:auth_pass}
+    driver-class-name: org.postgresql.Driver
+
+app:
+  security:
+    internal-api-key: ${INTERNAL_API_KEY:some-secret-internal-api-key}
+    auth-token-max-age: 3600
+    refresh-token-max-age: 2592000
+    refresh-token-cleanup-time: 0 0 2 * * ?
+    max-login-attempts: 3
+    token-blacklist-ttl-minutes: 65
+    token-blacklist-max-size: 10000
+    client-service-base-url: http://localhost:8083
+
+eureka:
+  instance:
+    prefer-ip-address: false
+    instance-id: ${spring.application.name}:${server.port}
+    hostname: localhost
+
+logging:
+  file:
+    name: ./logs/auth-service.log
